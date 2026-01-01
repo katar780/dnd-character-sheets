@@ -1,20 +1,23 @@
-// firebase-config.js
-// ВАЖНО: Замените эти значения на свои из Firebase Console
+// firebase-config.js - ЗАМЕНИТЕ НА СВОИ ЗНАЧЕНИЯ!
+// Получите их здесь: Firebase Console → Project Settings → General → Your apps → Web app
+
 const firebaseConfig = {
-    apiKey: "AIzaSyAqR3YOUR_API_KEY_HERE",
-    authDomain: "your-project-id.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project-id.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef1234567890"
+    apiKey: "AIzaSyABC123DEF456ghi789jkl", // ВАШ РЕАЛЬНЫЙ КЛЮЧ
+    authDomain: "ваш-проект.firebaseapp.com",
+    projectId: "ваш-проект",
+    storageBucket: "ваш-проект.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdef1234567890"
 };
 
 // Инициализация Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("Firebase инициализирован успешно");
+} else {
+    console.log("Firebase уже инициализирован");
+}
 
-// Экспортируем сервисы
+// Экспортируем для использования в других файлах
 const auth = firebase.auth();
 const db = firebase.firestore();
-
-// Проверяем, что Firebase загружен
-console.log("Firebase инициализирован");
