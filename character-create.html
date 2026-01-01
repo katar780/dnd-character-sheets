@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+// Вместо показывать форму входа ВСЕГДА
+if (isAuthenticated()) {
+    // ПОКАЗАТЬ форму создания персонажа
+    document.getElementById('characterForm').style.display = 'block';
+    document.getElementById('loginForm').style.display = 'none';
+} else {
+    // ПОКАЗАТЬ форму входа
+    document.getElementById('characterForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+}
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
