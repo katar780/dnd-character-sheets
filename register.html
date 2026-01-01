@@ -1,4 +1,20 @@
 <!DOCTYPE html>
+<script>
+// Временная конфигурация для теста (поместите перед firebase-config.js)
+const tempFirebaseConfig = {
+    apiKey: "test-key-123",
+    authDomain: "test.firebaseapp.com",
+    projectId: "test-project",
+    storageBucket: "test.appspot.com",
+    messagingSenderId: "123",
+    appId: "1:123:web:abc"
+};
+
+// Проверяем, не инициализирован ли уже Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(tempFirebaseConfig);
+}
+</script>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
