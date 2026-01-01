@@ -1,43 +1,47 @@
-<!-- create-character.html -->
+<!-- login.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Создание персонажа</title>
+    <title>Вход в систему</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="authCheck">
-        <!-- Проверка загрузки -->
-        <p>Проверка авторизации...</p>
-    </div>
-    
-    <!-- ФОРМА СОЗДАНИЯ (только для авторизованных) -->
-    <div id="characterForm" style="display: none;">
-        <h2>Создание нового персонажа</h2>
-        <form>
-            <!-- Поля формы -->
+    <div class="login-container">
+        <h1>Вход в систему</h1>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Имя пользователя или Email:</label>
+                <input type="text" id="username" name="username" required 
+                       placeholder="Введите ваш логин или email">
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="Введите пароль">
+            </div>
+            
+            <div class="remember-group">
+                <input type="checkbox" id="rememberMe" name="rememberMe">
+                <label for="rememberMe">Запомнить меня</label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Войти</button>
+            
+            <div class="links">
+                <a href="index.html">На главную</a>
+                <a href="#">Забыли пароль?</a>
+            </div>
         </form>
-    </div>
-    
-    <!-- ФОРМА ВХОДА (только для неавторизованных) -->
-    <div id="loginPrompt" style="display: none;">
-        <h2>Требуется вход</h2>
-        <p>Для создания персонажа войдите в систему</p>
-        <a href="login.html">Войти</a>
+        
+        <div id="message" class="message"></div>
     </div>
 
+    <!-- Подключаем скрипты -->
+    <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (isAuthenticated()) {
-            document.getElementById('characterForm').style.display = 'block';
-            document.getElementById('loginPrompt').style.display = 'none';
-        } else {
-            document.getElementById('characterForm').style.display = 'none';
-            document.getElementById('loginPrompt').style.display = 'block';
-        }
-        document.getElementById('authCheck').style.display = 'none';
-    });
-    </script>
+    <script src="js/login.js"></script> <!-- Отдельный файл для логики входа -->
 </body>
 </html>
