@@ -1,253 +1,295 @@
-// Система авторизации (LocalStorage)
+// Обертка для совместимости со старым кодом
 
-class AuthSystem {
+let authSystem = null;
+
+// Инициализация системы авторизации
+function initAuthSystem() {
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        console.log('Используем Firebase авторизацию');
+        authSystem = {
+            // Регистрация
+            register: async function(userData) {
+                if (!firebaseAuth) {
+                    console.error('FirebaseAuth не инициализирован');
+                    return { success: false, message: 'Система авторизации не готова' };
+                }
+                
+                const result = await firebaseAuth.register(userData);
+                
+                if (result.success) {
+                    // Ждем загрузки данных пользователя
+                    await new Promise(resolve => {
+                        const handler = () => {
+                            window.removeEventListener('userDataLoaded', handler);
+                            resolve();
+                        };
+                        window.addEventListener('userDataLoaded', handler);
+                        setTimeout(resolve, 2000);
+                    });
+                }
+                
+                return result;
+            },
+            
+            // Вход
+            login: async function(identifier, password) {
+                if (!firebaseAuth) {
+                    console.error('FirebaseAuth не инициализирован');
+                    return { success: false, message: 'Система авторизации не готова' };
+                }
+                
+                const result = await firebaseAuth.loginWithIdentifier(identifier, password);
+                
+                if (result.success) {
+                    // Ждем загрузки данных пользователя
+                    await new Promise(resolve => {
+                        const handler = () => {
+                            window.removeEventListener('userDataLoaded', handler);
+                            resolve();
+                        };
+                        window.addEventListener('userDataLoaded', handler);
+                        setTimeout(resolve, 2000);
+                    });
+                }
+                
+                return result;
+            },
+            
+            // Выход
+            logout: async function() {
+                if (firebaseAuth) {
+                    return await firebaseAuth.logout();
+                }
+                return { success: true, message: 'Выход выполнен' };
+            },
+            
+            // Текущий пользователь
+            getCurrentUser: function() {
+                const userData = localStorage.getItem('firebase_user_data');
+                return userData ? JSON.parse(userData) : null;
+            },
+            
+            // Проверка авторизации
+            isAuthenticated: function() {
+                return this.getCurrentUser() !== null;
+            },
+            
+            // Проверка ГМа
+            isGM: function() {
+                const user = this.getCurrentUser();
+                return user && (user.userType === 'gm' || user.userType === 'both');
+            },
+            
+            // Получение персонажей
+            getUserCharacters: async function() {
+                if (firebaseAuth) {
+                    return await firebaseAuth.getUserCharacters();
+                }
+                return [];
+            },
+            
+            // Создание персонажа
+            createCharacter: async function(characterData) {
+                if (firebaseAuth) {
+                    return await firebaseAuth.createCharacter(characterData);
+                }
+                return { success: false, message: 'Система не готова' };
+            }
+        };
+    } else {
+        console.log('Firebase недоступен, используем LocalStorage fallback');
+        authSystem = new LocalStorageAuthSystem();
+    }
+}
+
+// Fallback система на LocalStorage (на случай проблем с Firebase)
+class LocalStorageAuthSystem {
     constructor() {
-        this.usersKey = 'dnd_users';
-        this.currentUserKey = 'dnd_current_user';
+        this.usersKey = 'dnd_users_fallback';
+        this.currentUserKey = 'dnd_current_user_fallback';
         this.init();
     }
-
-    // Инициализация
+    
     init() {
-        // Если нет пользователей в хранилище, создаем тестовых
         if (!localStorage.getItem(this.usersKey)) {
             this.createDefaultUsers();
         }
-        
-        // Проверяем, авторизован ли пользователь
-        this.checkAuthStatus();
     }
-
-    // Создание тестовых пользователей
+    
     createDefaultUsers() {
         const defaultUsers = [
             {
                 id: 1,
-                username: 'master',
-                email: 'master@example.com',
-                password: 'master123', // В реальном приложении пароли нужно хэшировать!
+                username: 'Master',
+                email: 'master@dnd.com',
+                password: 'master123',
                 userType: 'gm',
-                createdAt: new Date().toISOString(),
-                characters: []
-            },
-            {
-                id: 2,
-                username: 'player1',
-                email: 'player1@example.com',
-                password: 'player123',
-                userType: 'player',
-                createdAt: new Date().toISOString(),
                 characters: []
             }
         ];
-        
         localStorage.setItem(this.usersKey, JSON.stringify(defaultUsers));
-        console.log('Созданы тестовые пользователи:', defaultUsers);
     }
-
-    // Регистрация нового пользователя
+    
     register(userData) {
         const users = this.getUsers();
         
-        // Проверка уникальности username и email
         if (users.find(u => u.username === userData.username)) {
             return { success: false, message: 'Имя пользователя уже занято' };
         }
         
-        if (users.find(u => u.email === userData.email)) {
-            return { success: false, message: 'Email уже используется' };
-        }
-        
-        // Создаем нового пользователя
         const newUser = {
-            id: Date.now(), // Простой ID на основе времени
-            username: userData.username,
-            email: userData.email,
-            password: userData.password, // ВНИМАНИЕ: в реальном приложении нужно хэшировать!
-            userType: userData.userType || 'player',
-            createdAt: new Date().toISOString(),
-            characters: [],
-            campaigns: []
+            id: Date.now(),
+            ...userData,
+            characters: []
         };
         
         users.push(newUser);
         localStorage.setItem(this.usersKey, JSON.stringify(users));
         
-        // Автоматически входим после регистрации
-        this.login(userData.username, userData.password);
+        // Автоматический вход
+        const { password, ...userWithoutPassword } = newUser;
+        localStorage.setItem(this.currentUserKey, JSON.stringify(userWithoutPassword));
         
-        return { 
-            success: true, 
-            message: 'Регистрация успешна!',
-            user: newUser 
-        };
+        return { success: true, user: userWithoutPassword };
     }
-
-    // Вход в систему
+    
     login(identifier, password) {
         const users = this.getUsers();
-        
-        // Ищем пользователя по username или email
         const user = users.find(u => 
             u.username === identifier || u.email === identifier
         );
         
-        if (!user) {
-            return { success: false, message: 'Пользователь не найден' };
+        if (!user || user.password !== password) {
+            return { success: false, message: 'Неверные данные' };
         }
         
-        if (user.password !== password) {
-            return { success: false, message: 'Неверный пароль' };
-        }
-        
-        // Сохраняем текущего пользователя (без пароля!)
         const { password: _, ...userWithoutPassword } = user;
         localStorage.setItem(this.currentUserKey, JSON.stringify(userWithoutPassword));
         
-        return { 
-            success: true, 
-            message: 'Вход выполнен успешно',
-            user: userWithoutPassword 
-        };
+        return { success: true, user: userWithoutPassword };
     }
-
-    // Выход из системы
+    
     logout() {
         localStorage.removeItem(this.currentUserKey);
         return { success: true, message: 'Выход выполнен' };
     }
-
-    // Получение текущего пользователя
+    
     getCurrentUser() {
         const userJson = localStorage.getItem(this.currentUserKey);
         return userJson ? JSON.parse(userJson) : null;
     }
-
-    // Проверка авторизации
+    
     isAuthenticated() {
         return this.getCurrentUser() !== null;
     }
-
-    // Проверка, является ли пользователь ГМом
+    
     isGM() {
         const user = this.getCurrentUser();
         return user && (user.userType === 'gm' || user.userType === 'both');
     }
-
-    // Получение всех пользователей
+    
     getUsers() {
         return JSON.parse(localStorage.getItem(this.usersKey) || '[]');
     }
-
-    // Сохранение пользователя
-    saveUser(user) {
-        const users = this.getUsers();
-        const index = users.findIndex(u => u.id === user.id);
-        
-        if (index !== -1) {
-            users[index] = user;
-            localStorage.setItem(this.usersKey, JSON.stringify(users));
-            
-            // Обновляем текущего пользователя, если это он
-            const current = this.getCurrentUser();
-            if (current && current.id === user.id) {
-                const { password, ...userWithoutPassword } = user;
-                localStorage.setItem(this.currentUserKey, JSON.stringify(userWithoutPassword));
-            }
-        }
-    }
-
-    // Добавление персонажа пользователю
-    addCharacterToUser(character) {
+    
+    async getUserCharacters() {
         const user = this.getCurrentUser();
-        if (!user) return false;
+        return user?.characters || [];
+    }
+    
+    async createCharacter(characterData) {
+        const user = this.getCurrentUser();
+        if (!user) return { success: false, message: 'Не авторизован' };
+        
+        const character = {
+            id: Date.now(),
+            ...characterData,
+            userId: user.id
+        };
         
         user.characters = user.characters || [];
         user.characters.push(character);
         
-        // Обновляем пользователя в хранилище
+        // Обновляем пользователя
         const users = this.getUsers();
-        const userIndex = users.findIndex(u => u.id === user.id);
-        
-        if (userIndex !== -1) {
-            users[userIndex].characters = user.characters;
+        const index = users.findIndex(u => u.id === user.id);
+        if (index !== -1) {
+            users[index].characters = user.characters;
             localStorage.setItem(this.usersKey, JSON.stringify(users));
             localStorage.setItem(this.currentUserKey, JSON.stringify(user));
         }
         
-        return true;
-    }
-    
-    // Проверка статуса авторизации и обновление интерфейса
-    checkAuthStatus() {
-        const user = this.getCurrentUser();
-        this.updateUI(user);
-        return user;
-    }
-    
-    // Обновление интерфейса в зависимости от авторизации
-    updateUI(user) {
-        // Находим все элементы для обновления
-        const authElements = document.querySelectorAll('[data-auth]');
-        
-        authElements.forEach(element => {
-            const authType = element.getAttribute('data-auth');
-            
-            switch(authType) {
-                case 'show-if-auth':
-                    element.style.display = user ? 'block' : 'none';
-                    break;
-                case 'show-if-not-auth':
-                    element.style.display = user ? 'none' : 'block';
-                    break;
-                case 'username':
-                    if (user && element.textContent.includes('{username}')) {
-                        element.textContent = element.textContent.replace('{username}', user.username);
-                    }
-                    break;
-                case 'user-type':
-                    if (user) {
-                        const types = {
-                            'player': '🎮 Игрок',
-                            'gm': '🎭 Мастер',
-                            'both': '⚔️ Игрок и Мастер'
-                        };
-                        element.textContent = types[user.userType] || user.userType;
-                    }
-                    break;
-            }
-        });
+        return { success: true, character: character };
     }
 }
 
-// Создаем глобальный экземпляр системы авторизации
-const auth = new AuthSystem();
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    // Ждем загрузки Firebase
+    setTimeout(() => {
+        initAuthSystem();
+        console.log('Система авторизации инициализирована:', authSystem ? 'Готово' : 'Ошибка');
+    }, 1000);
+});
 
-// Обработчики форм
+// Экспортируем для использования в других файлах
+const auth = {
+    register: async (userData) => {
+        if (!authSystem) initAuthSystem();
+        return await authSystem.register(userData);
+    },
+    login: async (identifier, password) => {
+        if (!authSystem) initAuthSystem();
+        return await authSystem.login(identifier, password);
+    },
+    logout: async () => {
+        if (!authSystem) initAuthSystem();
+        return await authSystem.logout();
+    },
+    getCurrentUser: () => {
+        if (!authSystem) initAuthSystem();
+        return authSystem.getCurrentUser();
+    },
+    isAuthenticated: () => {
+        if (!authSystem) initAuthSystem();
+        return authSystem.isAuthenticated();
+    },
+    isGM: () => {
+        if (!authSystem) initAuthSystem();
+        return authSystem.isGM();
+    },
+    getUserCharacters: async () => {
+        if (!authSystem) initAuthSystem();
+        return await authSystem.getUserCharacters();
+    },
+    createCharacter: async (characterData) => {
+        if (!authSystem) initAuthSystem();
+        return await authSystem.createCharacter(characterData);
+    }
+};
+
+// Обработчики форм (оставляем старые для совместимости)
 document.addEventListener('DOMContentLoaded', function() {
     // Форма регистрации
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
-        registerForm.addEventListener('submit', function(e) {
+        registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Собираем данные
             const userData = {
                 username: document.getElementById('username').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 password: document.getElementById('password').value,
-                userType: document.getElementById('userType').value
+                userType: document.getElementById('userType')?.value || 'player'
             };
             
-            // Валидация
             const errors = validateRegistration(userData);
             if (Object.keys(errors).length > 0) {
                 showErrors(errors);
                 return;
             }
             
-            // Регистрация
-            const result = auth.register(userData);
+            const result = await auth.register(userData);
             
             if (result.success) {
                 showMessage('Регистрация успешна! Перенаправляем...', 'success');
@@ -263,13 +305,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Форма входа
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const identifier = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
             
-            const result = auth.login(identifier, password);
+            const result = await auth.login(identifier, password);
             
             if (result.success) {
                 showMessage('Вход выполнен! Перенаправляем...', 'success');
@@ -281,38 +323,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Проверяем авторизацию при загрузке страницы
-    auth.checkAuthStatus();
 });
 
-// Валидация регистрации
+// Вспомогательные функции (оставляем старые)
 function validateRegistration(userData) {
     const errors = {};
     
-    // Username
     if (!userData.username || userData.username.length < 3) {
         errors.username = 'Имя должно быть не менее 3 символов';
     }
     
-    // Email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userData.email)) {
         errors.email = 'Введите корректный email';
     }
     
-    // Password
     if (!userData.password || userData.password.length < 6) {
         errors.password = 'Пароль должен быть не менее 6 символов';
     }
     
-    // Confirm password
     const confirmPassword = document.getElementById('confirmPassword');
     if (confirmPassword && userData.password !== confirmPassword.value) {
         errors.confirmPassword = 'Пароли не совпадают';
     }
     
-    // Terms
     const terms = document.getElementById('terms');
     if (terms && !terms.checked) {
         errors.terms = 'Необходимо согласиться с правилами';
@@ -321,12 +355,9 @@ function validateRegistration(userData) {
     return errors;
 }
 
-// Показать ошибки
 function showErrors(errors) {
-    // Очищаем все ошибки
     document.querySelectorAll('.error').forEach(el => el.textContent = '');
     
-    // Показываем новые ошибки
     for (const [field, message] of Object.entries(errors)) {
         const errorElement = document.getElementById(field + 'Error');
         if (errorElement) {
@@ -335,39 +366,33 @@ function showErrors(errors) {
     }
 }
 
-// Показать сообщение
 function showMessage(text, type = 'info') {
-    // Удаляем старые сообщения
     const oldMessage = document.querySelector('.message');
     if (oldMessage) oldMessage.remove();
     
-    // Создаем новое сообщение
     const message = document.createElement('div');
     message.className = `message ${type}`;
     message.textContent = text;
+    message.style.cssText = 'padding: 1rem; margin: 1rem 0; border-radius: 5px;';
     
-    // Вставляем в форму
+    if (type === 'success') {
+        message.style.background = 'rgba(46, 204, 113, 0.2)';
+        message.style.border = '1px solid #2ecc71';
+        message.style.color = '#2ecc71';
+    } else if (type === 'error') {
+        message.style.background = 'rgba(255, 71, 87, 0.2)';
+        message.style.border = '1px solid #ff4757';
+        message.style.color = '#ff4757';
+    }
+    
     const form = document.querySelector('form');
     if (form) {
         form.prepend(message);
-        
-        // Автоматически скрываем через 5 секунд
-        if (type !== 'error') {
-            setTimeout(() => message.remove(), 5000);
-        }
+    } else {
+        document.body.insertBefore(message, document.body.firstChild);
     }
-}
-
-// Выход из системы
-function logout() {
-    auth.logout();
-    showMessage('Выход выполнен', 'success');
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 1000);
-}
-
-// Экспортируем для использования в других файлах
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { AuthSystem, auth };
+    
+    if (type !== 'error') {
+        setTimeout(() => message.remove(), 5000);
+    }
 }
