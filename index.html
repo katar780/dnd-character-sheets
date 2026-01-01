@@ -8,11 +8,25 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
 </head>
 <body>
-    <header>
+<header>
+    <div class="header-container">
         <h1>🎲 DnD Character Sheets</h1>
         <p>Ведите листы персонажей для своих RPG-кампаний</p>
-    </header>
-
+        
+        <!-- Кнопки авторизации (видны только неавторизованным) -->
+        <div class="auth-buttons" id="guestMenu" style="display: none;">
+            <button onclick="location.href='login.html'">🔐 Войти</button>
+            <button onclick="location.href='register.html'" class="primary">📝 Регистрация</button>
+        </div>
+        
+        <!-- Меню пользователя (видны только авторизованным) -->
+        <div class="user-menu" id="userMenu" style="display: none;">
+            <span>Привет, <span id="userName"></span>!</span>
+            <button onclick="location.href='dashboard.html'">📊 Панель управления</button>
+            <button onclick="logout()">🚪 Выйти</button>
+        </div>
+    </div>
+</header>
     <main>
         <section class="intro">
             <h2>Добро пожаловать!</h2>
@@ -58,5 +72,32 @@
             demo.style.display = 'block';
         }
     </script>
+    <script>
+// Проверка авторизации на главной странице
+document.addEventListener('DOMContentLoaded', function() {
+    const user = JSON.parse(localStorage.getItem('dnd_current_user'));
+    const guestMenu = document.getElementById('guestMenu');
+    const userMenu = document.getElementById('userMenu');
+    const userName = document.getElementById('userName');
+    
+    if (user) {
+        // Пользователь авторизован
+        guestMenu.style.display = 'none';
+        userMenu.style.display = 'flex';
+        userName.textContent = user.username;
+    } else {
+        // Пользователь не авторизован
+        guestMenu.style.display = 'flex';
+        userMenu.style.display = 'none';
+    }
+});
+
+// Функция выхода
+function logout() {
+    localStorage.removeItem('dnd_current_user');
+    alert('Выход выполнен!');
+    window.location.reload();
+}
+</script>
 </body>
 </html>
