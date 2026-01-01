@@ -3,136 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления | DnD Character Sheets</title>
+    <title>Панель управления</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-    <header>
-        <div class="header-container">
-            <h1>🎲 Панель управления</h1>
-            <nav class="user-nav">
-                <span class="user-info" data-auth="username">
-                    Привет, {username}!
-                </span>
-                <span class="user-type" data-auth="user-type">
-                    [Тип аккаунта]
-                </span>
-                <button onclick="location.href='index.html'">🏠 Главная</button>
-                <button onclick="logout()">🚪 Выйти</button>
-            </nav>
-        </div>
-    </header>
-
-    <main class="dashboard">
-        <div class="sidebar">
-            <h3>Меню</h3>
-            <li><a href="character-create.html" class="active">🧙 Создать персонажа</a></li>
-            <ul class="dashboard-menu">
-                <li><a href="#characters" class="active">🧙 Мои персонажи</a></li>
-                <li><a href="#create-character">✨ Создать персонажа</a></li>
-                <li data-auth="show-if-auth" style="display: none;">
-                    <a href="#campaigns">🗺️ Мои кампании</a>
-                </li>
-                <li data-auth="show-if-auth" style="display: none;">
-                    <a href="#gm-tools">🎭 Инструменты мастера</a>
-                </li>
-                <li><a href="#settings">⚙️ Настройки</a></li>
-            </ul>
-            
-            <div class="quick-stats">
-                <h4>Статистика</h4>
-                <div class="stat">
-                    <span>Персонажей:</span>
-                    <span id="charactersCount">0</span>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-avatar" id="userAvatar">
+                    👤
                 </div>
-                <div class="stat">
-                    <span>Уровень:</span>
-                    <span>Новичок</span>
+                <div class="user-info">
+                    <h3 id="userName">Загрузка...</h3>
+                    <p id="userEmail">...</p>
+                    <p class="user-level" id="userLevel">Уровень: Новичок</p>
                 </div>
             </div>
-        </div>
-
-        <div class="content">
-            <!-- Секция: Мои персонажи -->
-            <section id="characters" class="dashboard-section active">
-                <h2>Мои персонажи</h2>
-                <div class="characters-grid" id="charactersList">
-                    <!-- Персонажи будут загружаться здесь -->
-                    <div class="empty-state">
-                        <p>У вас пока нет персонажей</p>
-                        <button onclick="showSection('create-character')">
-                            ✨ Создать первого персонажа
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active">
+                        <a href="dashboard.html">
+                            <span class="nav-icon">📊</span>
+                            <span>Обзор</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="character-create.html">
+                            <span class="nav-icon">👤</span>
+                            <span>Создать персонажа</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="myCharactersLink">
+                            <span class="nav-icon">🗂️</span>
+                            <span>Мои персонажи</span>
+                            <span class="badge" id="charCountBadge">0</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <span class="nav-icon">⚙️</span>
+                            <span>Настройки</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="logoutBtn">
+                            <span class="nav-icon">🚪</span>
+                            <span>Выйти</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="storage-info">
+                    <small>ID: <span id="userId">...</span></small>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h1>Панель управления</h1>
+                    <p id="welcomeMessage">Добро пожаловать!</p>
+                </div>
+                <div class="header-right">
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" onclick="window.location.href='character-create.html'">
+                            ➕ Создать персонажа
+                        </button>
+                        <button class="btn btn-secondary" id="refreshBtn">
+                            🔄 Обновить
                         </button>
                     </div>
                 </div>
-            </section>
-
-            <!-- Секция: Создание персонажа -->
-            <section id="create-character" class="dashboard-section">
-                <h2>Создание нового персонажа</h2>
-                <iframe src="character-create.html" class="character-creator-frame"></iframe>
-            </section>
-
-            <!-- Секция: Настройки -->
-            <section id="settings" class="dashboard-section">
-                <h2>Настройки аккаунта</h2>
-                <div class="settings-form">
-                    <h3>Личная информация</h3>
-                    <form id="profileForm">
-                        <div class="form-group">
-                            <label>Имя пользователя:</label>
-                            <input type="text" id="profileUsername" disabled>
-                            <small>Имя пользователя нельзя изменить</small>
+            </header>
+            
+            <!-- Статистика -->
+            <section class="stats-section">
+                <h2>Ваша статистика</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👤</div>
+                        <div class="stat-content">
+                            <h3>Персонажей</h3>
+                            <p class="stat-number" id="totalCharacters">0</p>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Email:</label>
-                            <input type="email" id="profileEmail">
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-content">
+                            <h3>Уровень</h3>
+                            <p class="stat-number" id="userLevelNumber">1</p>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Тип аккаунта:</label>
-                            <select id="profileUserType" disabled>
-                                <option value="player">🎮 Игрок</option>
-                                <option value="gm">🎭 Мастер (ГМ)</option>
-                                <option value="both">⚔️ И игрок, и мастер</option>
-                            </select>
-                            <small>Для смены типа аккаунта обратитесь к администратору</small>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <h3>Опыт</h3>
+                            <p class="stat-number" id="userXP">0/100</p>
                         </div>
-                        
-                        <h3>Смена пароля</h3>
-                        <div class="form-group">
-                            <label>Текущий пароль:</label>
-                            <input type="password" id="currentPassword">
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <h3>В системе</h3>
+                            <p class="stat-number" id="daysInSystem">1 день</p>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Новый пароль:</label>
-                            <input type="password" id="newPassword">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Подтвердите новый пароль:</label>
-                            <input type="password" id="confirmNewPassword">
-                        </div>
-                        
-                        <button type="submit" class="save-button">Сохранить изменения</button>
-                    </form>
+                    </div>
                 </div>
             </section>
-        </div>
-    </main>
+            
+            <!-- Быстрые действия -->
+            <section class="quick-actions-section">
+                <h2>Быстрые действия</h2>
+                <div class="actions-grid">
+                    <a href="character-create.html" class="action-card">
+                        <div class="action-icon">🧙‍♂️</div>
+                        <h3>Новый персонаж</h3>
+                        <p>Создайте уникального персонажа</p>
+                    </a>
+                    <a href="#" class="action-card">
+                        <div class="action-icon">📋</div>
+                        <h3>Шаблоны</h3>
+                        <p>Используйте готовые шаблоны</p>
+                    </a>
+                    <a href="#" class="action-card">
+                        <div class="action-icon">🛡️</div>
+                        <h3>Экипировка</h3>
+                        <p>Настройте снаряжение</p>
+                    </a>
+                    <a href="#" class="action-card">
+                        <div class="action-icon">📚</div>
+                        <h3>Гайды</h3>
+                        <p>Обучающие материалы</p>
+                    </a>
+                </div>
+            </section>
+            
+            <!-- Последние персонажи -->
+            <section class="recent-section">
+                <h2>Последние персонажи</h2>
+                <div class="characters-list" id="charactersList">
+                    <div class="empty-state">
+                        <p>У вас еще нет персонажей</p>
+                        <a href="character-create.html" class="btn btn-primary">
+                            Создать первого персонажа
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
-    <footer>
-        <p>DnD Character Sheets v1.0 | <span id="currentYear"></span></p>
-    </footer>
-
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <!-- Наши скрипты -->
+    <script src="firebase-config.js"></script>
     <script src="auth.js"></script>
     <script src="dashboard.js"></script>
+    
     <script>
-        // Устанавливаем текущий год в футере
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализируем панель
+            initDashboard();
+        });
     </script>
 </body>
 </html>
