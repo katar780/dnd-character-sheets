@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация | DnD Character Sheets</title>
+    <title>Регистрация</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="auth.css">
 </head>
@@ -11,63 +11,82 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <h1>🎲 Регистрация</h1>
-                <p>Создайте аккаунт для управления персонажами</p>
+                <a href="index.html" class="back-button">← На главную</a>
+                <h1>Регистрация</h1>
+                <p>Создайте новый аккаунт</p>
             </div>
             
             <form id="registerForm" class="auth-form">
                 <div class="form-group">
                     <label for="username">Имя пользователя:</label>
                     <input type="text" id="username" name="username" required 
-                           placeholder="Введите имя (3-20 символов)" minlength="3" maxlength="20">
-                    <div class="error" id="usernameError"></div>
+                           placeholder="Придумайте имя">
+                    <small>Будет отображаться в системе</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required 
-                           placeholder="example@email.com">
-                    <div class="error" id="emailError"></div>
+                           placeholder="ваш@email.com">
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Пароль:</label>
                     <input type="password" id="password" name="password" required 
-                           placeholder="Минимум 6 символов" minlength="6">
-                    <div class="error" id="passwordError"></div>
+                           placeholder="Минимум 6 символов">
+                    <div class="password-strength" id="passwordStrength">
+                        <div class="strength-bar"></div>
+                        <span class="strength-text">Слабый</span>
+                    </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="confirmPassword">Подтвердите пароль:</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                    <div class="error" id="confirmError"></div>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required 
+                           placeholder="Повторите пароль">
+                    <div id="passwordMatch" class="password-match"></div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="userType">Тип аккаунта:</label>
-                    <select id="userType" name="userType">
-                        <option value="player">🎮 Игрок</option>
-                        <option value="gm">🎭 Мастер (ГМ)</option>
-                        <option value="both">⚔️ И игрок, и мастер</option>
-                    </select>
-                </div>
-                
-                <div class="form-group checkbox-group">
                     <input type="checkbox" id="terms" name="terms" required>
-                    <label for="terms">Я согласен с правилами использования</label>
-                    <div class="error" id="termsError"></div>
+                    <label for="terms">Я согласен с <a href="#">условиями использования</a></label>
                 </div>
                 
-                <button type="submit" class="auth-button">Создать аккаунт</button>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span id="submitText">Зарегистрироваться</span>
+                    <span id="loadingSpinner" class="spinner" style="display: none;">⌛</span>
+                </button>
+                
+                <div class="auth-links">
+                    <a href="login.html">Уже есть аккаунт? Войдите</a>
+                </div>
             </form>
             
-            <div class="auth-footer">
-                <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
-                <p><a href="index.html">← Вернуться на главную</a></p>
-            </div>
+            <div id="message" class="message"></div>
         </div>
     </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
+    <!-- Наши скрипты -->
+    <script src="firebase-config.js"></script>
     <script src="auth.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Если уже авторизован - редирект
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    window.location.href = 'dashboard.html';
+                }
+            });
+            
+            // Инициализируем регистрацию
+            initRegister();
+        });
+    </script>
 </body>
 </html>
