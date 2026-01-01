@@ -1,51 +1,43 @@
+<!-- create-character.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход | DnD Character Sheets</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="auth.css">
+    <title>Создание персонажа</title>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h1>🎲 Вход в систему</h1>
-                <p>Войдите в свой аккаунт</p>
-            </div>
-            
-            <form id="loginForm" class="auth-form">
-                <div class="form-group">
-                    <label for="loginUsername">Имя пользователя или Email:</label>
-                    <input type="text" id="loginUsername" name="loginUsername" required 
-                           placeholder="Введите имя пользователя или email">
-                    <div class="error" id="loginUsernameError"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="loginPassword">Пароль:</label>
-                    <input type="password" id="loginPassword" name="loginPassword" required 
-                           placeholder="Введите пароль">
-                    <div class="error" id="loginPasswordError"></div>
-                </div>
-                
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Запомнить меня</label>
-                </div>
-                
-                <button type="submit" class="auth-button">Войти</button>
-            </form>
-            
-            <div class="auth-options">
-                <p><a href="forgot-password.html">Забыли пароль?</a></p>
-                <p><a href="register.html">Создать новый аккаунт</a></p>
-                <p><a href="index.html">← Вернуться на главную</a></p>
-            </div>
-        </div>
+    <div id="authCheck">
+        <!-- Проверка загрузки -->
+        <p>Проверка авторизации...</p>
     </div>
     
-    <script src="auth.js"></script>
+    <!-- ФОРМА СОЗДАНИЯ (только для авторизованных) -->
+    <div id="characterForm" style="display: none;">
+        <h2>Создание нового персонажа</h2>
+        <form>
+            <!-- Поля формы -->
+        </form>
+    </div>
+    
+    <!-- ФОРМА ВХОДА (только для неавторизованных) -->
+    <div id="loginPrompt" style="display: none;">
+        <h2>Требуется вход</h2>
+        <p>Для создания персонажа войдите в систему</p>
+        <a href="login.html">Войти</a>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (isAuthenticated()) {
+            document.getElementById('characterForm').style.display = 'block';
+            document.getElementById('loginPrompt').style.display = 'none';
+        } else {
+            document.getElementById('characterForm').style.display = 'none';
+            document.getElementById('loginPrompt').style.display = 'block';
+        }
+        document.getElementById('authCheck').style.display = 'none';
+    });
+    </script>
 </body>
 </html>
