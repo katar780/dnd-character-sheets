@@ -153,4 +153,12 @@
 }
 
 /* Адаптивность для auth */
-@media (max-width: 
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 25px;
+    }
+    
+    .social-login {
+        flex-direction: column;
+    }
+}
