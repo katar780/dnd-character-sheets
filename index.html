@@ -99,5 +99,30 @@ function logout() {
     window.location.reload();
 }
 </script>
+    <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // ВАШУ КОНФИГУРАЦИЮ СКОПИРУЙТЕ ИЗ FIREBASE CONSOLE
+  const firebaseConfig = {
+    apiKey: "AIzaSyD...ваш_api_key",
+    authDomain: "dnd-character-sheets.firebaseapp.com",
+    projectId: "dnd-character-sheets",
+    storageBucket: "dnd-character-sheets.appspot.com",
+    messagingSenderId: "1234567890",
+    appId: "1:1234567890:web:abc123def456"
+  };
+
+  // Инициализация Firebase
+  firebase.initializeApp(firebaseConfig);
+  
+  // Глобальные переменные
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  
+  console.log('Firebase инициализирован!');
+</script>
 </body>
 </html>
