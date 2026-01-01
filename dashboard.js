@@ -227,4 +227,55 @@ function setupEventListeners() {
         });
     }
     
-    // Ссы
+    // Ссылка на персонажей
+    const myCharactersLink = document.getElementById('myCharactersLink');
+    if (myCharactersLink) {
+        myCharactersLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Раздел "Мои персонажи" в разработке');
+        });
+    }
+}
+
+// Вспомогательные функции
+function getRandomGradient() {
+    const gradients = [
+        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+    ];
+    return gradients[Math.floor(Math.random() * gradients.length)];
+}
+
+function getClassEmoji(className) {
+    const emojis = {
+        'warrior': '⚔️',
+        'mage': '🔮',
+        'rogue': '🗡️',
+        'cleric': '✨',
+        'human': '👤',
+        'elf': '🧝',
+        'dwarf': '🧔',
+        'orc': '👹'
+    };
+    return emojis[className] || '👤';
+}
+
+// Функции для персонажей (заглушки)
+function viewCharacter(charId) {
+    alert('Просмотр персонажа ' + charId);
+}
+
+function editCharacter(charId) {
+    alert('Редактирование персонажа ' + charId);
+}
+
+// Экспортируем функцию для кнопки выхода на главной
+if (typeof window !== 'undefined') {
+    window.logout = logout;
+    window.viewCharacter = viewCharacter;
+    window.editCharacter = editCharacter;
+    window.loadCharacters = loadCharacters;
+}
