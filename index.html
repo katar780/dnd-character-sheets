@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD Character Sheets</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
+</head>
+<body>
+    <header>
+        <h1>🎲 DnD Character Sheets</h1>
+        <p>Ведите листы персонажей для своих RPG-кампаний</p>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Добро пожаловать!</h2>
+            <p>Это веб-приложение поможет вам:</p>
+            <ul>
+                <li>Создавать и хранить листы персонажей</li>
+                <li>Автоматически рассчитывать характеристики</li>
+                <li>Вести историю приключений</li>
+                <li>Мастеру управлять опытом игроков</li>
+            </ul>
+        </section>
+
+        <section class="demo">
+            <h2>Быстрый старт</h2>
+            <div class="buttons">
+                <button onclick="location.href='character-create.html'">
+                    🧙 Создать персонажа
+                </button>
+                <button onclick="location.href='gm-panel.html'">
+                    🎭 Панель мастера
+                </button>
+                <button onclick="showDemo()">
+                    🎯 Демо-расчет
+                </button>
+            </div>
+            
+            <div id="demoResult" class="demo-result" style="display: none;">
+                <h3>Пример расчета модификатора:</h3>
+                <p>Сила: 16 → Модификатор: +3</p>
+                <p>(16 - 10) / 2 = 3</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Проект в разработке | RPG Community</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function showDemo() {
+            const demo = document.getElementById('demoResult');
+            demo.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
