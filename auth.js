@@ -411,3 +411,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+function handleLoginSuccess(userData, token) {
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userData', JSON.stringify(userData));
+    
+    // ПЕРЕНАПРАВИТЬ на страницу создания персонажа
+    window.location.href = '/create-character.html';
+}
