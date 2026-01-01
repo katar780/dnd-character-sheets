@@ -1,449 +1,483 @@
-// Обертка для совместимости со старым кодом
+// auth.js - ЛОГИКА АВТОРИЗАЦИИ
+console.log('auth.js загружен');
 
-let authSystem = null;
-
-// Инициализация системы авторизации
-function initAuthSystem() {
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        console.log('Используем Firebase авторизацию');
-        authSystem = {
-            // Регистрация
-            register: async function(userData) {
-                if (!firebaseAuth) {
-                    console.error('FirebaseAuth не инициализирован');
-                    return { success: false, message: 'Система авторизации не готова' };
-                }
-                
-                const result = await firebaseAuth.register(userData);
-                
-                if (result.success) {
-                    // Ждем загрузки данных пользователя
-                    await new Promise(resolve => {
-                        const handler = () => {
-                            window.removeEventListener('userDataLoaded', handler);
-                            resolve();
-                        };
-                        window.addEventListener('userDataLoaded', handler);
-                        setTimeout(resolve, 2000);
-                    });
-                }
-                
-                return result;
-            },
-            
-            // Вход
-            login: async function(identifier, password) {
-                if (!firebaseAuth) {
-                    console.error('FirebaseAuth не инициализирован');
-                    return { success: false, message: 'Система авторизации не готова' };
-                }
-                
-                const result = await firebaseAuth.loginWithIdentifier(identifier, password);
-                
-                if (result.success) {
-                    // Ждем загрузки данных пользователя
-                    await new Promise(resolve => {
-                        const handler = () => {
-                            window.removeEventListener('userDataLoaded', handler);
-                            resolve();
-                        };
-                        window.addEventListener('userDataLoaded', handler);
-                        setTimeout(resolve, 2000);
-                    });
-                }
-                
-                return result;
-            },
-            
-            // Выход
-            logout: async function() {
-                if (firebaseAuth) {
-                    return await firebaseAuth.logout();
-                }
-                return { success: true, message: 'Выход выполнен' };
-            },
-            
-            // Текущий пользователь
-            getCurrentUser: function() {
-                const userData = localStorage.getItem('firebase_user_data');
-                return userData ? JSON.parse(userData) : null;
-            },
-            
-            // Проверка авторизации
-            isAuthenticated: function() {
-                return this.getCurrentUser() !== null;
-            },
-            
-            // Проверка ГМа
-            isGM: function() {
-                const user = this.getCurrentUser();
-                return user && (user.userType === 'gm' || user.userType === 'both');
-            },
-            
-            // Получение персонажей
-            getUserCharacters: async function() {
-                if (firebaseAuth) {
-                    return await firebaseAuth.getUserCharacters();
-                }
-                return [];
-            },
-            
-            // Создание персонажа
-            createCharacter: async function(characterData) {
-                if (firebaseAuth) {
-                    return await firebaseAuth.createCharacter(characterData);
-                }
-                return { success: false, message: 'Система не готова' };
-            }
-        };
-    } else {
-        console.log('Firebase недоступен, используем LocalStorage fallback');
-        authSystem = new LocalStorageAuthSystem();
-    }
+// Проверка состояния авторизации
+function checkAuthState() {
+    firebase.auth().onAuthStateChanged(function(user) {
+        console.log('Статус авторизации:', user ? 'Вошёл: ' + user.email : 'Не авторизован');
+    });
 }
 
-// Fallback система на LocalStorage (на случай проблем с Firebase)
-class LocalStorageAuthSystem {
-    constructor() {
-        this.usersKey = 'dnd_users_fallback';
-        this.currentUserKey = 'dnd_current_user_fallback';
-        this.init();
-    }
-    
-    init() {
-        if (!localStorage.getItem(this.usersKey)) {
-            this.createDefaultUsers();
-        }
-    }
-    
-    createDefaultUsers() {
-        const defaultUsers = [
-            {
-                id: 1,
-                username: 'Master',
-                email: 'master@dnd.com',
-                password: 'master123',
-                userType: 'gm',
-                characters: []
-            }
-        ];
-        localStorage.setItem(this.usersKey, JSON.stringify(defaultUsers));
-    }
-    
-    register(userData) {
-        const users = this.getUsers();
-        
-        if (users.find(u => u.username === userData.username)) {
-            return { success: false, message: 'Имя пользователя уже занято' };
-        }
-        
-        const newUser = {
-            id: Date.now(),
-            ...userData,
-            characters: []
-        };
-        
-        users.push(newUser);
-        localStorage.setItem(this.usersKey, JSON.stringify(users));
-        
-        // Автоматический вход
-        const { password, ...userWithoutPassword } = newUser;
-        localStorage.setItem(this.currentUserKey, JSON.stringify(userWithoutPassword));
-        
-        return { success: true, user: userWithoutPassword };
-    }
-    
-    login(identifier, password) {
-        const users = this.getUsers();
-        const user = users.find(u => 
-            u.username === identifier || u.email === identifier
-        );
-        
-        if (!user || user.password !== password) {
-            return { success: false, message: 'Неверные данные' };
-        }
-        
-        const { password: _, ...userWithoutPassword } = user;
-        localStorage.setItem(this.currentUserKey, JSON.stringify(userWithoutPassword));
-        
-        return { success: true, user: userWithoutPassword };
-    }
-    
-    logout() {
-        localStorage.removeItem(this.currentUserKey);
-        return { success: true, message: 'Выход выполнен' };
-    }
-    
-    getCurrentUser() {
-        const userJson = localStorage.getItem(this.currentUserKey);
-        return userJson ? JSON.parse(userJson) : null;
-    }
-    
-    isAuthenticated() {
-        return this.getCurrentUser() !== null;
-    }
-    
-    isGM() {
-        const user = this.getCurrentUser();
-        return user && (user.userType === 'gm' || user.userType === 'both');
-    }
-    
-    getUsers() {
-        return JSON.parse(localStorage.getItem(this.usersKey) || '[]');
-    }
-    
-    async getUserCharacters() {
-        const user = this.getCurrentUser();
-        return user?.characters || [];
-    }
-    
-    async createCharacter(characterData) {
-        const user = this.getCurrentUser();
-        if (!user) return { success: false, message: 'Не авторизован' };
-        
-        const character = {
-            id: Date.now(),
-            ...characterData,
-            userId: user.id
-        };
-        
-        user.characters = user.characters || [];
-        user.characters.push(character);
-        
-        // Обновляем пользователя
-        const users = this.getUsers();
-        const index = users.findIndex(u => u.id === user.id);
-        if (index !== -1) {
-            users[index].characters = user.characters;
-            localStorage.setItem(this.usersKey, JSON.stringify(users));
-            localStorage.setItem(this.currentUserKey, JSON.stringify(user));
-        }
-        
-        return { success: true, character: character };
-    }
-}
-
-// Инициализация при загрузке
-document.addEventListener('DOMContentLoaded', function() {
-    // Ждем загрузки Firebase
-    setTimeout(() => {
-        initAuthSystem();
-        console.log('Система авторизации инициализирована:', authSystem ? 'Готово' : 'Ошибка');
-    }, 1000);
-});
-
-// Экспортируем для использования в других файлах
-const auth = {
-    register: async (userData) => {
-        if (!authSystem) initAuthSystem();
-        return await authSystem.register(userData);
-    },
-    login: async (identifier, password) => {
-        if (!authSystem) initAuthSystem();
-        return await authSystem.login(identifier, password);
-    },
-    logout: async () => {
-        if (!authSystem) initAuthSystem();
-        return await authSystem.logout();
-    },
-    getCurrentUser: () => {
-        if (!authSystem) initAuthSystem();
-        return authSystem.getCurrentUser();
-    },
-    isAuthenticated: () => {
-        if (!authSystem) initAuthSystem();
-        return authSystem.isAuthenticated();
-    },
-    isGM: () => {
-        if (!authSystem) initAuthSystem();
-        return authSystem.isGM();
-    },
-    getUserCharacters: async () => {
-        if (!authSystem) initAuthSystem();
-        return await authSystem.getUserCharacters();
-    },
-    createCharacter: async (characterData) => {
-        if (!authSystem) initAuthSystem();
-        return await authSystem.createCharacter(characterData);
-    }
-};
-
-// Обработчики форм (оставляем старые для совместимости)
-document.addEventListener('DOMContentLoaded', function() {
-    // Форма регистрации
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        registerForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const userData = {
-                username: document.getElementById('username').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password: document.getElementById('password').value,
-                userType: document.getElementById('userType')?.value || 'player'
-            };
-            
-            const errors = validateRegistration(userData);
-            if (Object.keys(errors).length > 0) {
-                showErrors(errors);
-                return;
-            }
-            
-            const result = await auth.register(userData);
-            
-            if (result.success) {
-                showMessage('Регистрация успешна! Перенаправляем...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-            } else {
-                showMessage(result.message, 'error');
-            }
-        });
-    }
-    
-    // Форма входа
+// Инициализация входа
+function initLogin() {
     const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+    const messageDiv = document.getElementById('message');
+    const showPassword = document.getElementById('showPassword');
+    const rememberMe = document.getElementById('rememberMe');
+    
+    if (!loginForm) {
+        console.error('Форма входа не найдена');
+        return;
+    }
+    
+    // Показать/скрыть пароль
+    if (showPassword) {
+        showPassword.addEventListener('change', function() {
+            const passwordField = document.getElementById('password');
+            passwordField.type = this.checked ? 'text' : 'password';
+        });
+    }
+    
+    // Обработка отправки формы
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const submitText = document.getElementById('submitText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        // Валидация
+        if (!email || !password) {
+            showMessage('Заполните все поля', 'error', messageDiv);
+            return;
+        }
+        
+        // Показываем загрузку
+        submitText.textContent = 'Вход...';
+        loadingSpinner.style.display = 'inline-block';
+        submitBtn.disabled = true;
+        
+        try {
+            // Вход через Firebase
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
             
-            const identifier = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
+            console.log('Успешный вход:', user.email);
             
-            const result = await auth.login(identifier, password);
-            
-            if (result.success) {
-                showMessage('Вход выполнен! Перенаправляем...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
+            // Сохраняем в localStorage если "Запомнить меня"
+            if (rememberMe && rememberMe.checked) {
+                localStorage.setItem('userRemembered', 'true');
+                localStorage.setItem('userEmail', email);
             } else {
-                showMessage(result.message, 'error');
+                localStorage.removeItem('userRemembered');
+                localStorage.removeItem('userEmail');
+            }
+            
+            // Проверяем, есть ли displayName
+            if (!user.displayName) {
+                // Запрашиваем имя пользователя если его нет
+                const username = prompt('Введите ваше имя для отображения:') || email.split('@')[0];
+                await user.updateProfile({
+                    displayName: username
+                });
+            }
+            
+            // Сохраняем данные пользователя в Firestore
+            await saveUserData(user);
+            
+            // Редирект
+            showMessage('Вход успешен! Перенаправление...', 'success', messageDiv);
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Ошибка входа:', error);
+            
+            let errorMessage = 'Ошибка входа';
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    errorMessage = 'Пользователь не найден';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = 'Неверный пароль';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Неверный формат email';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Слишком много попыток. Попробуйте позже';
+                    break;
+                default:
+                    errorMessage = error.message;
+            }
+            
+            showMessage(errorMessage, 'error', messageDiv);
+            
+            // Восстанавливаем кнопку
+            submitText.textContent = 'Войти';
+            loadingSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // Социальные логины
+    const googleLoginBtn = document.getElementById('googleLogin');
+    const githubLoginBtn = document.getElementById('githubLogin');
+    
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', signInWithGoogle);
+    }
+    
+    if (githubLoginBtn) {
+        githubLoginBtn.addEventListener('click', signInWithGitHub);
+    }
+    
+    // Восстановление пароля
+    const forgotPassword = document.getElementById('forgotPassword');
+    if (forgotPassword) {
+        forgotPassword.addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = prompt('Введите ваш email для восстановления пароля:');
+            if (email) {
+                firebase.auth().sendPasswordResetEmail(email)
+                    .then(() => {
+                        alert('Инструкции по восстановлению отправлены на ' + email);
+                    })
+                    .catch(error => {
+                        alert('Ошибка: ' + error.message);
+                    });
             }
         });
     }
-});
-
-// Вспомогательные функции (оставляем старые)
-function validateRegistration(userData) {
-    const errors = {};
     
-    if (!userData.username || userData.username.length < 3) {
-        errors.username = 'Имя должно быть не менее 3 символов';
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
-        errors.email = 'Введите корректный email';
-    }
-    
-    if (!userData.password || userData.password.length < 6) {
-        errors.password = 'Пароль должен быть не менее 6 символов';
-    }
-    
-    const confirmPassword = document.getElementById('confirmPassword');
-    if (confirmPassword && userData.password !== confirmPassword.value) {
-        errors.confirmPassword = 'Пароли не совпадают';
-    }
-    
-    const terms = document.getElementById('terms');
-    if (terms && !terms.checked) {
-        errors.terms = 'Необходимо согласиться с правилами';
-    }
-    
-    return errors;
-}
-
-function showErrors(errors) {
-    document.querySelectorAll('.error').forEach(el => el.textContent = '');
-    
-    for (const [field, message] of Object.entries(errors)) {
-        const errorElement = document.getElementById(field + 'Error');
-        if (errorElement) {
-            errorElement.textContent = message;
+    // Автозаполнение если был чекбокс "запомнить"
+    if (localStorage.getItem('userRemembered') === 'true') {
+        const savedEmail = localStorage.getItem('userEmail');
+        if (savedEmail && document.getElementById('email')) {
+            document.getElementById('email').value = savedEmail;
+            if (rememberMe) rememberMe.checked = true;
         }
     }
 }
 
-function showMessage(text, type = 'info') {
-    const oldMessage = document.querySelector('.message');
-    if (oldMessage) oldMessage.remove();
+// Инициализация регистрации
+function initRegister() {
+    const registerForm = document.getElementById('registerForm');
+    const messageDiv = document.getElementById('message');
     
-    const message = document.createElement('div');
-    message.className = `message ${type}`;
-    message.textContent = text;
-    message.style.cssText = 'padding: 1rem; margin: 1rem 0; border-radius: 5px;';
-    
-    if (type === 'success') {
-        message.style.background = 'rgba(46, 204, 113, 0.2)';
-        message.style.border = '1px solid #2ecc71';
-        message.style.color = '#2ecc71';
-    } else if (type === 'error') {
-        message.style.background = 'rgba(255, 71, 87, 0.2)';
-        message.style.border = '1px solid #ff4757';
-        message.style.color = '#ff4757';
+    if (!registerForm) {
+        console.error('Форма регистрации не найдена');
+        return;
     }
     
-    const form = document.querySelector('form');
-    if (form) {
-        form.prepend(message);
-    } else {
-        document.body.insertBefore(message, document.body.firstChild);
+    // Валидация пароля
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('confirmPassword');
+    const strengthBar = document.querySelector('.strength-bar');
+    const strengthText = document.querySelector('.strength-text');
+    const matchDiv = document.getElementById('passwordMatch');
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const strength = checkPasswordStrength(password);
+            
+            // Обновляем индикатор
+            if (strengthBar) {
+                strengthBar.style.width = strength.percent + '%';
+                strengthBar.style.background = strength.color;
+            }
+            
+            if (strengthText) {
+                strengthText.textContent = strength.text;
+                strengthText.style.color = strength.color;
+            }
+            
+            // Проверяем совпадение паролей
+            checkPasswordMatch();
+        });
     }
     
-    if (type !== 'error') {
-        setTimeout(() => message.remove(), 5000);
+    if (confirmInput) {
+        confirmInput.addEventListener('input', checkPasswordMatch);
     }
-}
-// Функция проверки, вошел ли пользователь
-function isAuthenticated() {
-    const token = localStorage.getItem('authToken'); // или sessionStorage
-    const user = localStorage.getItem('userData');
-    return token && user; // true если есть токен и данные
-}
-
-// Проверять при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.location.pathname.includes('/panel')) {
-        if (!isAuthenticated()) {
-            window.location.href = '/login.html'; // или login
+    
+    function checkPasswordMatch() {
+        const password = passwordInput ? passwordInput.value : '';
+        const confirm = confirmInput ? confirmInput.value : '';
+        
+        if (!matchDiv) return;
+        
+        if (!password && !confirm) {
+            matchDiv.textContent = '';
+            matchDiv.className = 'password-match';
+            return;
+        }
+        
+        if (confirm && password !== confirm) {
+            matchDiv.textContent = 'Пароли не совпадают';
+            matchDiv.className = 'password-match error';
+        } else if (confirm && password === confirm) {
+            matchDiv.textContent = 'Пароли совпадают';
+            matchDiv.className = 'password-match success';
+        } else {
+            matchDiv.textContent = '';
+            matchDiv.className = 'password-match';
         }
     }
-});
-function handleLoginSuccess(userData, token) {
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(userData));
     
-    // ПЕРЕНАПРАВИТЬ на страницу создания персонажа
-    window.location.href = '/create-character.html';
-}
-// js/auth.js
-function handleLoginSuccess(userData) {
-    // Сохраняем токен и данные пользователя
-    localStorage.setItem('authToken', userData.token);
-    localStorage.setItem('userData', JSON.stringify({
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-        name: userData.name || userData.username,
-        accountType: userData.accountType || 'Обычный'
-    }));
+    function checkPasswordStrength(password) {
+        let score = 0;
+        
+        if (password.length >= 8) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+        
+        const levels = [
+            { percent: 20, color: '#ff4444', text: 'Слабый' },
+            { percent: 40, color: '#ff9900', text: 'Нормальный' },
+            { percent: 60, color: '#ffcc00', text: 'Хороший' },
+            { percent: 80, color: '#99cc00', text: 'Сильный' },
+            { percent: 100, color: '#00c851', text: 'Очень сильный' }
+        ];
+        
+        return levels[Math.min(score, levels.length - 1)];
+    }
     
-    // Перенаправляем в панель управления
-    window.location.href = 'panel.html';
+    // Обработка отправки формы регистрации
+    registerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const terms = document.getElementById('terms').checked;
+        
+        const submitBtn = registerForm.querySelector('button[type="submit"]');
+        const submitText = document.getElementById('submitText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        // Валидация
+        if (!username || !email || !password || !confirmPassword) {
+            showMessage('Заполните все поля', 'error', messageDiv);
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            showMessage('Пароли не совпадают', 'error', messageDiv);
+            return;
+        }
+        
+        if (password.length < 6) {
+            showMessage('Пароль должен быть минимум 6 символов', 'error', messageDiv);
+            return;
+        }
+        
+        if (!terms) {
+            showMessage('Необходимо согласие с условиями', 'error', messageDiv);
+            return;
+        }
+        
+        // Показываем загрузку
+        submitText.textContent = 'Регистрация...';
+        loadingSpinner.style.display = 'inline-block';
+        submitBtn.disabled = true;
+        
+        try {
+            // Создаем пользователя в Firebase
+            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            console.log('Пользователь создан:', user.uid);
+            
+            // Обновляем профиль с именем
+            await user.updateProfile({
+                displayName: username
+            });
+            
+            // Сохраняем дополнительные данные в Firestore
+            await db.collection('users').doc(user.uid).set({
+                uid: user.uid,
+                username: username,
+                email: email,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                accountType: 'basic',
+                level: 1,
+                xp: 0,
+                characters: []
+            });
+            
+            showMessage('Регистрация успешна! Перенаправление...', 'success', messageDiv);
+            
+            // Автоматический вход и редирект
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Ошибка регистрации:', error);
+            
+            let errorMessage = 'Ошибка регистрации';
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'Email уже используется';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Неверный формат email';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Пароль слишком слабый';
+                    break;
+                default:
+                    errorMessage = error.message;
+            }
+            
+            showMessage(errorMessage, 'error', messageDiv);
+            
+            // Восстанавливаем кнопку
+            submitText.textContent = 'Зарегистрироваться';
+            loadingSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+        }
+    });
 }
 
-// Функция проверки авторизации
-function isAuthenticated() {
-    const token = localStorage.getItem('authToken');
-    const user = localStorage.getItem('userData');
-    return token && user;
+// Вход через Google
+async function signInWithGoogle() {
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+        
+        // Сохраняем данные в Firestore
+        await saveUserData(user);
+        
+        // Редирект
+        window.location.href = 'dashboard.html';
+        
+    } catch (error) {
+        console.error('Ошибка входа через Google:', error);
+        alert('Ошибка входа через Google: ' + error.message);
+    }
 }
 
-// Функция выхода
+// Вход через GitHub
+async function signInWithGitHub() {
+    try {
+        const provider = new firebase.auth.GithubAuthProvider();
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+        
+        // Сохраняем данные в Firestore
+        await saveUserData(user);
+        
+        // Редирект
+        window.location.href = 'dashboard.html';
+        
+    } catch (error) {
+        console.error('Ошибка входа через GitHub:', error);
+        alert('Ошибка входа через GitHub: ' + error.message);
+    }
+}
+
+// Сохранение данных пользователя в Firestore
+async function saveUserData(user) {
+    try {
+        const userRef = db.collection('users').doc(user.uid);
+        const userDoc = await userRef.get();
+        
+        if (!userDoc.exists) {
+            // Создаем новую запись
+            await userRef.set({
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName || user.email.split('@')[0],
+                photoURL: user.photoURL || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                accountType: 'basic',
+                level: 1,
+                xp: 0,
+                characters: [],
+                provider: user.providerData[0]?.providerId || 'email'
+            });
+            console.log('Новый пользователь сохранен в Firestore');
+        } else {
+            // Обновляем lastLogin
+            await userRef.update({
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('Данные пользователя обновлены');
+        }
+        
+    } catch (error) {
+        console.error('Ошибка сохранения данных пользователя:', error);
+    }
+}
+
+// Выход из системы
 function logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    window.location.href = 'index.html';
+    if (confirm('Вы уверены, что хотите выйти?')) {
+        firebase.auth().signOut().then(() => {
+            // Очищаем localStorage если нужно
+            localStorage.removeItem('userRemembered');
+            window.location.href = 'index.html';
+        }).catch(error => {
+            console.error('Ошибка выхода:', error);
+            alert('Ошибка при выходе: ' + error.message);
+        });
+    }
 }
+
+// Показать сообщение
+function showMessage(text, type, element) {
+    if (!element) return;
+    
+    element.textContent = text;
+    element.className = 'message ' + type;
+    element.style.display = 'block';
+    
+    // Автоматически скрывать success сообщения
+    if (type === 'success') {
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Обновление статуса на главной
+function updateAuthStatus() {
+    const authStatus = document.getElementById('authStatus');
+    if (!authStatus) return;
+    
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            authStatus.innerHTML = `
+                <p>Вы вошли как: <strong>${user.displayName || user.email}</strong></p>
+                <div style="margin-top: 10px;">
+                    <a href="dashboard.html" class="btn btn-primary" style="padding: 8px 16px;">Перейти в панель</a>
+                    <button onclick="logout()" class="btn btn-outline" style="padding: 8px 16px;">Выйти</button>
+                </div>
+            `;
+        } else {
+            authStatus.innerHTML = `
+                <p>Вы не авторизованы</p>
+                <div style="margin-top: 10px;">
+                    <a href="login.html" class="btn btn-primary" style="padding: 8px 16px;">Войти</a>
+                    <a href="register.html" class="btn btn-outline" style="padding: 8px 16px;">Регистрация</a>
+                </div>
+            `;
+        }
+    });
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Страница загружена, инициализация auth.js');
+    
+    // Проверяем, загружен ли Firebase
+    if (typeof firebase === 'undefined') {
+        console.error('Firebase не загружен!');
+        return;
+    }
+    
+    // Автопроверка состояния
+    checkAuthState();
+});
