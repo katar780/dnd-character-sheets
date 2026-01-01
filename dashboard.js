@@ -26,57 +26,84 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Загрузка персонажей пользователя
-function loadUserCharacters() {
-    const user = auth.getCurrentUser();
+async function loadUserCharacters() {
     const charactersList = document.getElementById('charactersList');
+    const user = auth.getCurrentUser();
     
-    if (!user || !user.characters || user.characters.length === 0) {
+    if (!user) {
         charactersList.innerHTML = `
             <div class="empty-state">
-                <p>У вас пока нет персонажей</p>
-                <button onclick="showSection('create-character')">
-                    ✨ Создать первого персонажа
+                <p>Пожалуйста, войдите в систему</p>
+                <button onclick="location.href='login.html'">
+                    🔐 Войти
                 </button>
             </div>
         `;
         return;
     }
     
-    let html = '';
-    user.characters.forEach((character, index) => {
-        const modifier = (score) => Math.floor((score - 10) / 2);
+    try {
+        const characters = await auth.getUserCharacters();
         
-        html += `
-            <div class="character-card">
-                <h3>${character.name || 'Безымянный'}</h3>
-                <div class="race-class">
-                    ${character.race || 'Неизвестная раса'} • Уровень ${character.level || 1}
+        if (!characters || characters.length === 0) {
+            charactersList.innerHTML = `
+                <div class="empty-state">
+                    <p>У вас пока нет персонажей</p>
+                    <button onclick="showSection('create-character')">
+                        ✨ Создать первого персонажа
+                    </button>
                 </div>
-                
-                <div class="character-stats">
-                    <div class="stat-item">
-                        <span class="stat-value">${character.stats?.strength || 10}</span>
-                        <span class="stat-label">Сила (${modifier(character.stats?.strength || 10) >= 0 ? '+' : ''}${modifier(character.stats?.strength || 10)})</span>
+            `;
+            return;
+        }
+        
+        let html = '';
+        characters.forEach((character, index) => {
+            const modifier = (score) => Math.floor((score - 10) / 2);
+            
+            html += `
+                <div class="character-card">
+                    <h3>${character.name || 'Безымянный'}</h3>
+                    <div class="race-class">
+                        ${character.race || 'Неизвестная раса'} • ${character.class || 'Неизвестный класс'} • Уровень ${character.level || 1}
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-value">${character.stats?.dexterity || 10}</span>
-                        <span class="stat-label">Ловкость (${modifier(character.stats?.dexterity || 10) >= 0 ? '+' : ''}${modifier(character.stats?.dexterity || 10)})</span>
+                    
+                    <div class="character-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">${character.stats?.strength || 10}</span>
+                            <span class="stat-label">Сила (${modifier(character.stats?.strength || 10) >= 0 ? '+' : ''}${modifier(character.stats?.strength || 10)})</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${character.stats?.dexterity || 10}</span>
+                            <span class="stat-label">Ловкость (${modifier(character.stats?.dexterity || 10) >= 0 ? '+' : ''}${modifier(character.stats?.dexterity || 10)})</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${character.stats?.constitution || 10}</span>
+                            <span class="stat-label">Тело (${modifier(character.stats?.constitution || 10) >= 0 ? '+' : ''}${modifier(character.stats?.constitution || 10)})</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-value">${character.stats?.constitution || 10}</span>
-                        <span class="stat-label">Тело (${modifier(character.stats?.constitution || 10) >= 0 ? '+' : ''}${modifier(character.stats?.constitution || 10)})</span>
+                    
+                    <div class="character-actions">
+                        <button onclick="viewCharacter('${character.id}')">👁️ Просмотр</button>
+                        <button onclick="deleteCharacter('${character.id}')" class="danger">🗑️ Удалить</button>
                     </div>
                 </div>
-                
-                <div class="character-actions">
-                    <button onclick="editCharacter(${index})">✏️ Редактировать</button>
-                    <button onclick="deleteCharacter(${index})" class="danger">🗑️ Удалить</button>
-                </div>
+            `;
+        });
+        
+        charactersList.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Ошибка загрузки персонажей:', error);
+        charactersList.innerHTML = `
+            <div class="empty-state">
+                <p>Ошибка загрузки персонажей</p>
+                <button onclick="loadUserCharacters()">
+                    🔄 Попробовать снова
+                </button>
             </div>
         `;
-    });
-    
-    charactersList.innerHTML = html;
+    }
 }
 
 // Обновление статистики
