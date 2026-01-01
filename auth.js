@@ -396,3 +396,18 @@ function showMessage(text, type = 'info') {
         setTimeout(() => message.remove(), 5000);
     }
 }
+// Функция проверки, вошел ли пользователь
+function isAuthenticated() {
+    const token = localStorage.getItem('authToken'); // или sessionStorage
+    const user = localStorage.getItem('userData');
+    return token && user; // true если есть токен и данные
+}
+
+// Проверять при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.pathname.includes('/panel')) {
+        if (!isAuthenticated()) {
+            window.location.href = '/login.html'; // или login
+        }
+    }
+});
