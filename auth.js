@@ -418,3 +418,32 @@ function handleLoginSuccess(userData, token) {
     // ПЕРЕНАПРАВИТЬ на страницу создания персонажа
     window.location.href = '/create-character.html';
 }
+// js/auth.js
+function handleLoginSuccess(userData) {
+    // Сохраняем токен и данные пользователя
+    localStorage.setItem('authToken', userData.token);
+    localStorage.setItem('userData', JSON.stringify({
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        name: userData.name || userData.username,
+        accountType: userData.accountType || 'Обычный'
+    }));
+    
+    // Перенаправляем в панель управления
+    window.location.href = 'panel.html';
+}
+
+// Функция проверки авторизации
+function isAuthenticated() {
+    const token = localStorage.getItem('authToken');
+    const user = localStorage.getItem('userData');
+    return token && user;
+}
+
+// Функция выхода
+function logout() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    window.location.href = 'index.html';
+}
