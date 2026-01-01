@@ -1,264 +1,230 @@
-// Логика панели управления
-document.addEventListener('DOMContentLoaded', function() {
-    // Проверяем авторизацию
-    const user = auth.getCurrentUser();
-    if (!user) {
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    // Заполняем информацию о пользователе
-    document.getElementById('profileUsername').value = user.username;
-    document.getElementById('profileEmail').value = user.email || '';
-    document.getElementById('profileUserType').value = user.userType || 'player';
-    
-    // Загружаем персонажей пользователя
-    loadUserCharacters();
-    
-    // Обновляем статистику
-    updateStats();
-    
-    // Настройка навигации
-    setupDashboardNavigation();
-    
-    // Настройка формы профиля
-    setupProfileForm();
-});
+// dashboard.js - ЛОГИКА ПАНЕЛИ УПРАВЛЕНИЯ
+console.log('dashboard.js загружен');
 
-// Загрузка персонажей пользователя
-async function loadUserCharacters() {
-    const charactersList = document.getElementById('charactersList');
-    const user = auth.getCurrentUser();
+let currentUser = null;
+let userData = null;
+
+// Инициализация панели
+async function initDashboard() {
+    console.log('Инициализация панели...');
     
-    if (!user) {
-        charactersList.innerHTML = `
-            <div class="empty-state">
-                <p>Пожалуйста, войдите в систему</p>
-                <button onclick="location.href='login.html'">
-                    🔐 Войти
-                </button>
-            </div>
-        `;
-        return;
+    // Проверяем авторизацию
+    firebase.auth().onAuthStateChanged(async function(user) {
+        if (!user) {
+            // Не авторизован - редирект на логин
+            console.log('Не авторизован, редирект на login.html');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        currentUser = user;
+        console.log('Пользователь:', user.email, 'UID:', user.uid);
+        
+        // Загружаем данные пользователя из Firestore
+        await loadUserData();
+        
+        // Обновляем UI
+        updateUserInfo();
+        loadUserStats();
+        loadCharacters();
+        
+        // Настраиваем обработчики
+        setupEventListeners();
+    });
+}
+
+// Загрузка данных пользователя из Firestore
+async function loadUserData() {
+    try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        
+        if (userDoc.exists) {
+            userData = userDoc.data();
+            console.log('Данные пользователя загружены:', userData);
+        } else {
+            console.log('Документ пользователя не найден, создаем...');
+            // Создаем документ если его нет
+            userData = {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                displayName: currentUser.displayName || currentUser.email.split('@')[0],
+                accountType: 'basic',
+                level: 1,
+                xp: 0,
+                characters: [],
+                createdAt: new Date()
+            };
+            
+            await db.collection('users').doc(currentUser.uid).set(userData);
+        }
+        
+    } catch (error) {
+        console.error('Ошибка загрузки данных пользователя:', error);
+        // Используем базовые данные
+        userData = {
+            displayName: currentUser.displayName || currentUser.email.split('@')[0],
+            accountType: 'basic',
+            level: 1,
+            xp: 0,
+            characters: []
+        };
     }
+}
+
+// Обновление информации о пользователе в UI
+function updateUserInfo() {
+    // Имя пользователя
+    const userNameElement = document.getElementById('userName');
+    if (userNameElement) {
+        userNameElement.textContent = userData.displayName || currentUser.displayName || currentUser.email;
+    }
+    
+    // Email
+    const userEmailElement = document.getElementById('userEmail');
+    if (userEmailElement) {
+        userEmailElement.textContent = currentUser.email;
+    }
+    
+    // Уровень
+    const userLevelElement = document.getElementById('userLevel');
+    if (userLevelElement) {
+        userLevelElement.textContent = `Уровень: ${userData.level || 1}`;
+    }
+    
+    // ID пользователя
+    const userIdElement = document.getElementById('userId');
+    if (userIdElement) {
+        userIdElement.textContent = currentUser.uid.substring(0, 8) + '...';
+    }
+    
+    // Приветственное сообщение
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    if (welcomeMessage) {
+        const hour = new Date().getHours();
+        let greeting = 'Добрый день';
+        
+        if (hour < 6) greeting = 'Доброй ночи';
+        else if (hour < 12) greeting = 'Доброе утро';
+        else if (hour < 18) greeting = 'Добрый день';
+        else greeting = 'Добрый вечер';
+        
+        welcomeMessage.textContent = `${greeting}, ${userData.displayName || 'Искатель приключений'}!`;
+    }
+    
+    // Аватар
+    const userAvatar = document.getElementById('userAvatar');
+    if (userAvatar && currentUser.photoURL) {
+        userAvatar.innerHTML = `<img src="${currentUser.photoURL}" alt="Аватар" style="width:100%;height:100%;border-radius:50%;">`;
+    } else if (userAvatar) {
+        // Используем первую букву имени
+        const name = userData.displayName || currentUser.email;
+        const firstLetter = name.charAt(0).toUpperCase();
+        userAvatar.textContent = firstLetter;
+        userAvatar.style.background = getRandomGradient();
+    }
+}
+
+// Загрузка статистики
+async function loadUserStats() {
+    try {
+        // Количество персонажей
+        const charactersCount = userData.characters ? userData.characters.length : 0;
+        
+        // Обновляем UI
+        document.getElementById('totalCharacters').textContent = charactersCount;
+        document.getElementById('charCountBadge').textContent = charactersCount;
+        
+        document.getElementById('userLevelNumber').textContent = userData.level || 1;
+        document.getElementById('userXP').textContent = `${userData.xp || 0}/100`;
+        
+        // Дней в системе
+        if (userData.createdAt) {
+            const createdDate = userData.createdAt.toDate ? userData.createdAt.toDate() : new Date(userData.createdAt);
+            const daysInSystem = Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('daysInSystem').textContent = `${daysInSystem} дн.`;
+        }
+        
+    } catch (error) {
+        console.error('Ошибка загрузки статистики:', error);
+    }
+}
+
+// Загрузка персонажей
+async function loadCharacters() {
+    const charactersList = document.getElementById('charactersList');
+    if (!charactersList) return;
     
     try {
-        const characters = await auth.getUserCharacters();
+        // Получаем персонажей пользователя
+        const charactersSnapshot = await db.collection('characters')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('createdAt', 'desc')
+            .limit(5)
+            .get();
         
-        if (!characters || characters.length === 0) {
+        if (charactersSnapshot.empty) {
             charactersList.innerHTML = `
                 <div class="empty-state">
-                    <p>У вас пока нет персонажей</p>
-                    <button onclick="showSection('create-character')">
-                        ✨ Создать первого персонажа
-                    </button>
+                    <p>У вас еще нет персонажей</p>
+                    <a href="character-create.html" class="btn btn-primary">
+                        Создать первого персонажа
+                    </a>
                 </div>
             `;
             return;
         }
         
-        let html = '';
-        characters.forEach((character, index) => {
-            const modifier = (score) => Math.floor((score - 10) / 2);
-            
+        let html = '<div class="characters-grid">';
+        
+        charactersSnapshot.forEach(doc => {
+            const char = doc.data();
             html += `
                 <div class="character-card">
-                    <h3>${character.name || 'Безымянный'}</h3>
-                    <div class="race-class">
-                        ${character.race || 'Неизвестная раса'} • ${character.class || 'Неизвестный класс'} • Уровень ${character.level || 1}
+                    <div class="character-avatar">${getClassEmoji(char.class)}</div>
+                    <div class="character-info">
+                        <h4>${char.name}</h4>
+                        <p>${char.race} • ${char.class}</p>
+                        <p class="character-level">Уровень ${char.level || 1}</p>
                     </div>
-                    
-                    <div class="character-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">${character.stats?.strength || 10}</span>
-                            <span class="stat-label">Сила (${modifier(character.stats?.strength || 10) >= 0 ? '+' : ''}${modifier(character.stats?.strength || 10)})</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${character.stats?.dexterity || 10}</span>
-                            <span class="stat-label">Ловкость (${modifier(character.stats?.dexterity || 10) >= 0 ? '+' : ''}${modifier(character.stats?.dexterity || 10)})</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${character.stats?.constitution || 10}</span>
-                            <span class="stat-label">Тело (${modifier(character.stats?.constitution || 10) >= 0 ? '+' : ''}${modifier(character.stats?.constitution || 10)})</span>
-                        </div>
-                    </div>
-                    
                     <div class="character-actions">
-                        <button onclick="viewCharacter('${character.id}')">👁️ Просмотр</button>
-                        <button onclick="deleteCharacter('${character.id}')" class="danger">🗑️ Удалить</button>
+                        <button class="btn-small" onclick="viewCharacter('${doc.id}')">👁️</button>
+                        <button class="btn-small" onclick="editCharacter('${doc.id}')">✏️</button>
                     </div>
                 </div>
             `;
         });
         
+        html += '</div>';
         charactersList.innerHTML = html;
         
     } catch (error) {
         console.error('Ошибка загрузки персонажей:', error);
         charactersList.innerHTML = `
-            <div class="empty-state">
+            <div class="error-state">
                 <p>Ошибка загрузки персонажей</p>
-                <button onclick="loadUserCharacters()">
-                    🔄 Попробовать снова
-                </button>
+                <button onclick="loadCharacters()" class="btn btn-secondary">Повторить</button>
             </div>
         `;
     }
 }
 
-// Обновление статистики
-function updateStats() {
-    const user = auth.getCurrentUser();
-    if (user && user.characters) {
-        document.getElementById('charactersCount').textContent = user.characters.length;
-    }
-}
-
-// Настройка навигации dashboard
-function setupDashboardNavigation() {
-    const menuLinks = document.querySelectorAll('.dashboard-menu a');
-    const sections = document.querySelectorAll('.dashboard-section');
-    
-    menuLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+// Настройка обработчиков событий
+function setupEventListeners() {
+    // Кнопка выхода
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            const targetId = this.getAttribute('href').substring(1);
-            
-            // Обновляем активные элементы меню
-            menuLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Показываем выбранную секцию
-            showSection(targetId);
+            logout();
         });
-    });
-    
-    // Обработка iframe (форма создания персонажа)
-    const iframe = document.querySelector('.character-creator-frame');
-    if (iframe) {
-        iframe.onload = function() {
-            // Когда персонаж создан в iframe, обновляем список
-            try {
-                iframe.contentWindow.addEventListener('characterCreated', function() {
-                    loadUserCharacters();
-                    updateStats();
-                    showSection('characters');
-                });
-            } catch(e) {
-                // Cross-origin ограничения
-                console.log('Не удалось настроить связь с iframe');
-            }
-        };
-    }
-}
-
-// Показать секцию
-function showSection(sectionId) {
-    // Скрываем все секции
-    document.querySelectorAll('.dashboard-section').forEach(section => {
-        section.classList.remove('active');
-    });
-    
-    // Показываем выбранную секцию
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.classList.add('active');
     }
     
-    // Обновляем меню
-    document.querySelectorAll('.dashboard-menu a').forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${sectionId}`) {
-            link.classList.add('active');
-        }
-    });
-}
-
-// Настройка формы профиля
-function setupProfileForm() {
-    const profileForm = document.getElementById('profileForm');
-    if (!profileForm) return;
-    
-    profileForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const user = auth.getCurrentUser();
-        if (!user) return;
-        
-        const newEmail = document.getElementById('profileEmail').value;
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmNewPassword').value;
-        
-        let hasChanges = false;
-        
-        // Обновляем email, если изменился
-        if (newEmail && newEmail !== user.email) {
-            user.email = newEmail;
-            hasChanges = true;
-        }
-        
-        // Смена пароля
-        if (currentPassword && newPassword) {
-            if (newPassword !== confirmPassword) {
-                alert('Новые пароли не совпадают!');
-                return;
-            }
-            
-            // В реальном приложении здесь должна быть проверка текущего пароля
-            // и хэширование нового пароля
-            user.password = newPassword; // ВНИМАНИЕ: нужно хэшировать!
-            hasChanges = true;
-            
-            // Очищаем поля паролей
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmNewPassword').value = '';
-        }
-        
-        // Сохраняем изменения
-        if (hasChanges) {
-            auth.saveUser(user);
-            alert('Изменения сохранены!');
-        } else {
-            alert('Нет изменений для сохранения');
-        }
-    });
-}
-
-// Редактирование персонажа
-function editCharacter(index) {
-    const user = auth.getCurrentUser();
-    if (!user || !user.characters[index]) return;
-    
-    const character = user.characters[index];
-    alert(`Редактирование персонажа: ${character.name}\n\nЭтот функционал будет добавлен в следующем обновлении.`);
-    // В будущем здесь будет открытие формы редактирования
-}
-
-// Удаление персонажа
-function deleteCharacter(index) {
-    if (!confirm('Вы уверены, что хотите удалить этого персонажа?')) {
-        return;
+    // Кнопка обновления
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            location.reload();
+        });
     }
     
-    const user = auth.getCurrentUser();
-    if (!user || !user.characters) return;
-    
-    user.characters.splice(index, 1);
-    auth.saveUser(user);
-    
-    loadUserCharacters();
-    updateStats();
-    alert('Персонаж удален');
-}
-
-// Событие создания персонажа (вызывается из character-create.html)
-window.addEventListener('characterCreated', function(e) {
-    if (e.detail && e.detail.character) {
-        loadUserCharacters();
-        updateStats();
-        showSection('characters');
-    }
-});
+    // Ссы
