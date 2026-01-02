@@ -1,3 +1,284 @@
+/* ===== ДЕКОРАТИВНЫЕ ЭЛЕМЕНТЫ ФОНА ===== */
+.fantasy-elements {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+/* Свитки на фоне */
+.bg-scroll {
+    position: absolute;
+    font-size: 8rem;
+    opacity: 0.03;
+    color: var(--gold);
+    transform: rotate(var(--rotation));
+    filter: blur(1px);
+    animation: floatScroll 30s linear infinite;
+}
+
+.scroll-1 {
+    top: 10%;
+    left: 5%;
+    --rotation: -15deg;
+    animation-delay: 0s;
+}
+
+.scroll-2 {
+    top: 60%;
+    right: 10%;
+    --rotation: 20deg;
+    animation-delay: 10s;
+}
+
+.scroll-3 {
+    bottom: 20%;
+    left: 15%;
+    --rotation: 10deg;
+    animation-delay: 20s;
+}
+
+@keyframes floatScroll {
+    0%, 100% { 
+        transform: rotate(var(--rotation)) translateY(0) scale(1);
+        opacity: 0.03;
+    }
+    50% { 
+        transform: rotate(calc(var(--rotation) + 5deg)) translateY(-20px) scale(1.05);
+        opacity: 0.05;
+    }
+}
+
+/* Руны */
+.rune {
+    position: absolute;
+    font-family: 'Segoe UI Symbol', sans-serif;
+    font-size: 3rem;
+    opacity: 0.05;
+    color: var(--silver);
+    font-weight: bold;
+}
+
+.rune-1 {
+    top: 20%;
+    right: 15%;
+    animation: glowRune 8s ease-in-out infinite;
+}
+
+.rune-2 {
+    top: 70%;
+    left: 10%;
+    animation: glowRune 10s ease-in-out infinite reverse;
+}
+
+.rune-3 {
+    bottom: 30%;
+    right: 20%;
+    animation: glowRune 12s ease-in-out infinite;
+}
+
+.rune-4 {
+    top: 40%;
+    left: 20%;
+    animation: glowRune 9s ease-in-out infinite reverse;
+}
+
+@keyframes glowRune {
+    0%, 100% { 
+        opacity: 0.03;
+        filter: drop-shadow(0 0 0px var(--gold));
+    }
+    50% { 
+        opacity: 0.08;
+        filter: drop-shadow(0 0 10px var(--gold));
+    }
+}
+
+/* Оружие */
+.weapon {
+    position: absolute;
+    font-size: 5rem;
+    opacity: 0.04;
+    animation: rotateWeapon 40s linear infinite;
+}
+
+.weapon-1 {
+    top: 15%;
+    left: 5%;
+}
+
+.weapon-2 {
+    bottom: 15%;
+    right: 5%;
+    animation-direction: reverse;
+}
+
+@keyframes rotateWeapon {
+    0% { transform: rotate(0deg) scale(1); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Магические частицы */
+.particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: var(--gold);
+    border-radius: 50%;
+    opacity: 0;
+    animation: floatParticle 15s linear infinite;
+}
+
+.particle:nth-child(1) {
+    top: 10%;
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+    top: 30%;
+    right: 25%;
+    animation-delay: 3s;
+}
+
+.particle:nth-child(3) {
+    bottom: 40%;
+    left: 30%;
+    animation-delay: 6s;
+}
+
+.particle:nth-child(4) {
+    bottom: 20%;
+    right: 35%;
+    animation-delay: 9s;
+}
+
+.particle:nth-child(5) {
+    top: 50%;
+    left: 40%;
+    animation-delay: 12s;
+}
+
+@keyframes floatParticle {
+    0% {
+        opacity: 0;
+        transform: translateY(0) translateX(0);
+    }
+    10% {
+        opacity: 0.3;
+    }
+    90% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100px) translateX(50px);
+    }
+}
+
+/* ===== УЛУЧШАЕМ ВИДИМОСТЬ ТЕКСТА ===== */
+.title-main,
+.title-sub,
+.hero-title,
+.hero-text,
+.section-title,
+.section-subtitle,
+.scroll-header h4,
+.scroll-content p,
+.scroll-list li,
+.cta-text h3,
+.cta-text p,
+.footer-section h5,
+.footer-section p,
+.footer-link {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Особенно для светлого текста на тёмном фоне */
+.hero-text,
+.cta-text p,
+.footer-section p {
+    color: rgba(241, 245, 249, 0.9);
+}
+
+/* Улучшаем контраст кнопок */
+.btn {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    font-weight: bold;
+}
+
+.btn-quest,
+.btn-magic,
+.btn-scroll {
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Улучшаем видимость карточек свитков */
+.scroll-card {
+    background: linear-gradient(135deg, 
+        rgba(245, 233, 212, 0.95), 
+        rgba(232, 217, 181, 0.95));
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(139, 69, 19, 0.2),
+        0 0 0 1px rgba(212, 175, 55, 0.3);
+}
+
+/* Эффект свечения при наведении */
+.scroll-card:hover {
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 30px rgba(212, 175, 55, 0.3),
+        0 0 20px rgba(212, 175, 55, 0.2);
+}
+
+/* Улучшаем видимость модального окна */
+.parchment-modal {
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 30px rgba(139, 69, 19, 0.3),
+        0 0 0 2px rgba(212, 175, 55, 0.4),
+        0 0 30px rgba(212, 175, 55, 0.1);
+}
+
+/* ===== АДАПТИВНЫЕ ПРАВКИ ===== */
+@media (max-width: 768px) {
+    .bg-scroll {
+        font-size: 5rem;
+        opacity: 0.02;
+    }
+    
+    .rune {
+        font-size: 2rem;
+    }
+    
+    .weapon {
+        font-size: 3rem;
+    }
+    
+    .main-content {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .bg-scroll,
+    .rune,
+    .weapon {
+        display: none; /* Скрываем на очень маленьких экранах */
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+}
 /* ===== ФЭНТЕЗИ ФОН ===== */
 body::before {
     content: '';
