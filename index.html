@@ -3,35 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D&D Character Sheets</title>
+    <title>Хроники Астралума - Управление персонажами D&D</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Firebase SDK (версия 9 или выше) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+    <!-- Фоновый эффект пергамента -->
+    <div class="parchment-bg"></div>
+    
+    <!-- Основной контейнер -->
     <div class="container">
-        <header>
-            <h1>🎲 D&D Character Manager</h1>
-            <p>Отслеживайте опыт и даунтайм ваших персонажей</p>
-        </header>
-        
-        <main>
-            <div class="hero">
-                <h2>Начните приключение</h2>
-                <div class="buttons">
-                    <a href="auth.html?mode=login" class="btn login-btn">Войти</a>
-                    <a href="auth.html?mode=register" class="btn register-btn">Регистрация</a>
+        <!-- Шапка с геральдикой -->
+        <header class="main-header">
+            <div class="header-heraldry">
+                <div class="heraldic-left">
+                    <div class="dragon-icon">🐉</div>
+                </div>
+                <div class="header-title">
+                    <h1 class="title-main">Хроники Астралума</h1>
+                    <p class="title-sub">Свитки Приключений D&D</p>
+                    <div class="header-divider">
+                        <div class="divider-left"></div>
+                        <div class="divider-center">⚔️</div>
+                        <div class="divider-right"></div>
+                    </div>
+                </div>
+                <div class="heraldic-right">
+                    <div class="sword-icon">⚔</div>
                 </div>
             </div>
+            
+            <nav class="main-nav">
+                <a href="#features" class="nav-link">
+                    <span class="nav-icon">📜</span> Возможности
+                </a>
+                <a href="#about" class="nav-link">
+                    <span class="nav-icon">🏰</span> О Хрониках
+                </a>
+                <a href="#tomes" class="nav-link">
+                    <span class="nav-icon">📚</span> Тома Знаний
+                </a>
+                <button id="scribe-btn" class="nav-link nav-button">
+                    <span class="nav-icon">✍️</span> Стать Летописцем
+                </button>
+            </nav>
+        </header>
+
+        <!-- Героический раздел -->
+        <main class="main-content">
+            <section class="hero-section">
+                <div class="hero-banner">
+                    <h2 class="hero-title">Да начнутся великие хроники!</h2>
+                    <p class="hero-text">
+                        Ведите летопись своих подвигов, отслеживайте рост мастерства 
+                        и планируйте деяния в дни затишья. Здесь каждая история 
+                        обретает форму, а каждый герой — своё место в сагах.
+                    </p>
+                    
+                    <div class="hero-actions">
+                        <button id="begin-chronicle" class="btn btn-quest">
+                            <span class="btn-icon">📖</span> Начать Хронику
+                        </button>
+                        <button id="view-tomes" class="btn btn-scroll">
+                            <span class="btn-icon">👁️</span> Узреть Тома
+                        </button>
+                    </div>
+                    
+                    <div class="hero-features">
+                        <div class="feature-badge">
+                            <span class="badge-icon">🛡️</span>
+                            <span>Защита Свитков</span>
+                        </div>
+                        <div class="feature-badge">
+                            <span class="badge-icon">🧙‍♂️</span>
+                            <span>Мудрость Старейшин</span>
+                        </div>
+                        <div class="feature-badge">
+                            <span class="badge-icon">🗺️</span>
+                            <span>Карты Путешествий</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Иллюстрация героя -->
+                <div class="hero-illustration">
+                    <div class="knight-silhouette"></div>
+                    <div class="mage-silhouette"></div>
+                    <div class="archer-silhouette"></div>
+                </div>
+            </section>
+
+            <!-- Свитки Возможностей -->
+            <section id="features" class="scrolls-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span class="title-icon">📜</span> Свитки Возможностей
+                    </h3>
+                    <p class="section-subtitle">Сила, запечатлённая в пергаменте</p>
+                </div>
+                
+                <div class="scrolls-grid">
+                    <!-- Свиток 1 -->
+                    <div class="scroll-card">
+                        <div class="scroll-header">
+                            <div class="scroll-icon">⚔️</div>
+                            <h4>Трактат о Подвигах</h4>
+                        </div>
+                        <div class="scroll-content">
+                            <p>Записывайте сражения, отслеживайте опыт и восхождения по ступеням мастерства.</p>
+                            <ul class="scroll-list">
+                                <li>📊 Автоматический расчёт опыта</li>
+                                <li>⭐ Система достижений</li>
+                                <li>🏆 Звания и титулы</li>
+                            </ul>
+                        </div>
+                        <div class="scroll-seal">
+                            <span>Печать Воина</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Свиток 2 -->
+                    <div class="scroll-card">
+                        <div class="scroll-header">
+                            <div class="scroll-icon">⏳</div>
+                            <h4>Гримуар Затиший</h4>
+                        </div>
+                        <div class="scroll-content">
+                            <p>Планируйте деяния в дни между великими битвами и путешествиями.</p>
+                            <ul class="scroll-list">
+                                <li>📅 Календарь активностей</li>
+                                <li>🏛️ Развитие умений</li>
+                                <li>💰 Приумножение богатств</li>
+                            </ul>
+                        </div>
+                        <div class="scroll-seal">
+                            <span>Печать Мага</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Свиток 3 -->
+                    <div class="scroll-card">
+                        <div class="scroll-header">
+                            <div class="scroll-icon">👑</div>
+                            <h4>Анналы Героев</h4>
+                        </div>
+                        <div class="scroll-content">
+                            <p>Храните полные досье на ваших персонажей, их историю и снаряжение.</p>
+                            <ul class="scroll-list">
+                                <li>📖 Подробные биографии</li>
+                                <li>🎭 Внешность и характер</li>
+                                <li>🛡️ Инвентарь и артефакты</li>
+                            </ul>
+                        </div>
+                        <div class="scroll-seal">
+                            <span>Печать Короля</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Свиток 4 -->
+                    <div class="scroll-card">
+                        <div class="scroll-header">
+                            <div class="scroll-icon">☁️</div>
+                            <h4>Облачные Хранилища</h4>
+                        </div>
+                        <div class="scroll-content">
+                            <p>Доступ к вашим хроникам с любого алтаря познания (устройства).</p>
+                            <ul class="scroll-list">
+                                <li>📱 На любом устройстве</li>
+                                <li>🔄 Синхронизация</li>
+                                <li>🔒 Защита заклинаниями</li>
+                            </ul>
+                        </div>
+                        <div class="scroll-seal">
+                            <span>Печать Архимага</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Призыв к действию -->
+            <section class="cta-section">
+                <div class="cta-banner">
+                    <div class="cta-text">
+                        <h3>Готовы начать свою сагу?</h3>
+                        <p>Присоединяйтесь к летописцам Астралума и обретите бессмертие в хрониках!</p>
+                    </div>
+                    <button id="join-chronicles" class="btn btn-magic">
+                        <span class="btn-icon">✨</span> Вступить в Орден Летописцев
+                    </button>
+                </div>
+            </section>
         </main>
-        
-        <footer>
-            <p>Использует Firebase для хранения данных</p>
+
+        <!-- Подвал -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>Орден Летописцев</h5>
+                    <p>Хранители знаний и преданий мира Астралум</p>
+                    <p class="footer-note">Использует древние артефакты Firebase</p>
+                </div>
+                <div class="footer-section">
+                    <h5>Священные Символы</h5>
+                    <div class="footer-symbols">
+                        <span>⚔️</span>
+                        <span>🛡️</span>
+                        <span>📜</span>
+                        <span>🔮</span>
+                        <span>🏹</span>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h5>Карты Мира</h5>
+                    <a href="#" class="footer-link">Гильдия Мастеров</a>
+                    <a href="#" class="footer-link">Тайные Знания</a>
+                    <a href="#" class="footer-link">Архивы</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2023 Хроники Астралума. Все права защищены магией.</p>
+            </div>
         </footer>
     </div>
-    
+
+    <!-- Модальное окно для летописцев -->
+    <div id="scribe-modal" class="modal">
+        <div class="modal-content parchment-modal">
+            <button class="close-modal">&times;</button>
+            
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <span class="title-icon">✍️</span> Стать Летописцем
+                </h3>
+                <p class="modal-subtitle">Запечатлейте своё имя в истории</p>
+            </div>
+            
+            <!-- Форма входа -->
+            <div id="login-scroll" class="scribe-form">
+                <h4>Войти в Архивы</h4>
+                <form id="loginForm">
+                    <div class="form-field">
+                        <label for="login-email">Свиток Призыва (Email)</label>
+                        <input type="email" id="login-email" placeholder="ваше_имя@астралум.орден" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="login-password">Тайное Слово (Пароль)</label>
+                        <input type="password" id="login-password" placeholder="Защитите свои хроники" required>
+                    </div>
+                    <button type="submit" class="btn btn-quest">
+                        <span class="btn-icon">🔓</span> Открыть Архивы
+                    </button>
+                </form>
+                <p class="form-switch">
+                    Нет печати летописца? 
+                    <a href="#" id="switch-to-register">Получить печать</a>
+                </p>
+            </div>
+            
+            <!-- Форма регистрации -->
+            <div id="register-scroll" class="scribe-form" style="display: none;">
+                <h4>Получить Печать Летописца</h4>
+                <form id="registerForm">
+                    <div class="form-field">
+                        <label for="register-name">Имя в Хрониках</label>
+                        <input type="text" id="register-name" placeholder="Как вас записать в летописи?" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="register-email">Свиток Призыва</label>
+                        <input type="email" id="register-email" placeholder="ваше_имя@астралум.орден" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="register-password">Тайное Слово</label>
+                        <input type="password" id="register-password" placeholder="Не менее 6 рун" minlength="6" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="register-confirm">Подтверждение Слова</label>
+                        <input type="password" id="register-confirm" placeholder="Повторите тайное слово" required>
+                    </div>
+                    <button type="submit" class="btn btn-magic">
+                        <span class="btn-icon">✨</span> Скрепить Печатью
+                    </button>
+                </form>
+                <p class="form-switch">
+                    Уже имеете печать? 
+                    <a href="#" id="switch-to-login">Войти в Архивы</a>
+                </p>
+            </div>
+            
+            <!-- Гость -->
+            <div class="guest-option">
+                <p>Или <button id="guest-access" class="btn-link">войти как паломник</button></p>
+                <small>Паломники не могут хранить свитки в облаке</small>
+            </div>
+            
+            <!-- Сообщения -->
+            <div id="scribe-message" class="scribe-message"></div>
+        </div>
+    </div>
+
+    <!-- Подключаем JavaScript -->
     <script src="js/firebase-config.js"></script>
     <script src="js/app.js"></script>
 </body>
