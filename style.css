@@ -1,4 +1,26 @@
+/* ЭКСТРЕННЫЙ ФОН - если всё ещё белый */
+body {
+    background: 
+        /* Тёмный градиент */
+        linear-gradient(135deg, #0a0806 0%, #1a1208 25%, #2c1810 50%, #1a1208 75%, #0a0806 100%),
+        
+        /* Текстура */
+        url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%230a0806"/><path d="M0,50 L100,50 M50,0 L50,100" stroke="%231a1208" stroke-width="1" opacity="0.1"/></svg>');
+    
+    color: #f1f5f9 !important;
+    min-height: 100vh;
+}
 
+/* Гарантируем тёмный фон для всех элементов */
+.container,
+.main-header,
+.main-content,
+.main-footer,
+.scroll-card,
+.parchment-modal {
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    color: #f1f5f9 !important;
+}
 /* ===== ФЭНТЕЗИ ФОН ===== */
 body::before {
     content: '';
