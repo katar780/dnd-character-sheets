@@ -3,94 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная - Система персонажей</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="auth.css">
+    <title>D&D Character Sheets</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Firebase SDK (версия 9 или выше) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>🎮 Система создания персонажей</h1>
-            <p class="subtitle">Создавайте уникальных персонажей и управляйте ими</p>
+        <header>
+            <h1>🎲 D&D Character Manager</h1>
+            <p>Отслеживайте опыт и даунтайм ваших персонажей</p>
         </header>
-
-        <main class="main-content">
-            <div class="hero-section">
-                <div class="hero-text">
-                    <h2>Добро пожаловать!</h2>
-                    <p>Начните своё приключение, создав первого персонажа. Управляйте, развивайте и кастомизируйте!</p>
-                    
-                    <div class="auth-status" id="authStatus">
-                        <p>Проверка статуса...</p>
-                    </div>
-                    
-                    <div class="cta-buttons">
-                        <a href="login.html" class="btn btn-primary">Войти</a>
-                        <a href="register.html" class="btn btn-secondary">Регистрация</a>
-                        <a href="dashboard.html" class="btn btn-outline">Панель управления</a>
-                    </div>
-                </div>
-                
-                <div class="hero-image">
-                    <div class="character-preview">
-                        <div class="character-placeholder">
-                            🧙‍♂️
-                        </div>
-                        <p>Ваш будущий персонаж</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="features">
-                <h3>Возможности системы:</h3>
-                <div class="features-grid">
-                    <div class="feature">
-                        <div class="feature-icon">👤</div>
-                        <h4>Создание персонажей</h4>
-                        <p>Кастомизация внешности, навыков и характеристик</p>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">📊</div>
-                        <h4>Статистика</h4>
-                        <p>Отслеживание прогресса и достижений</p>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">🛡️</div>
-                        <h4>Инвентарь</h4>
-                        <p>Управление предметами и экипировкой</p>
-                    </div>
+        
+        <main>
+            <div class="hero">
+                <h2>Начните приключение</h2>
+                <div class="buttons">
+                    <a href="auth.html?mode=login" class="btn login-btn">Войти</a>
+                    <a href="auth.html?mode=register" class="btn register-btn">Регистрация</a>
                 </div>
             </div>
         </main>
         
-        <footer class="footer">
-            <p>© 2024 Система персонажей. Все права защищены.</p>
-            <p class="debug-info" id="debugInfo"></p>
+        <footer>
+            <p>Использует Firebase для хранения данных</p>
         </footer>
     </div>
-
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
-    <!-- Наши скрипты -->
-    <script src="firebase-config.js"></script>
-    <script src="auth.js"></script>
-    <script src="script.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Проверяем авторизацию
-            checkAuthState();
-            
-            // Обновляем статус
-            updateAuthStatus();
-            
-            // Показываем debug info
-            const debugInfo = document.getElementById('debugInfo');
-            debugInfo.textContent = `Firebase: ${firebase.apps.length > 0 ? 'Загружен' : 'Ошибка'}`;
-        });
-    </script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
