@@ -1,40 +1,33 @@
-// firebase-config.js - ПОЛУЧИТЕ ЭТИ ЗНАЧЕНИЯ ИЗ FIREBASE CONSOLE!
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-// ВАЖНО: Замените ВСЕ значения ниже на свои реальные из Firebase Console
-
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    // 1. apiKey - ДЛИННЫЙ ключ, начинается с "AIzaSy..."
-    apiKey: "AIzaSyDEXAMPLE1234567890AbCdEfGhIjKlMnOpQ",
-    
-    // 2. authDomain - ваш-проект.firebaseapp.com
-    authDomain: "your-project-name-12345.firebaseapp.com",
-    
-    // 3. projectId - ID проекта (без .firebaseapp.com)
-    projectId: "your-project-name-12345",
-    
-    // 4. storageBucket - ваш-проект.appspot.com
-    storageBucket: "your-project-name-12345.appspot.com",
-    
-    // 5. messagingSenderId - цифры, например "123456789012"
-    messagingSenderId: "123456789012",
-    
-    // 6. appId - начинается с "1:", например "1:123456789012:web:abc123def456"
-    appId: "1:123456789012:web:abc123def4567890abcdef"
+  apiKey: "AIzaSyCF399qSKsQTGuQd87JOhp9JsnuDdDZe5I",
+  authDomain: "dnd-character-sheets-b34d3.firebaseapp.com",
+  projectId: "dnd-character-sheets-b34d3",
+  storageBucket: "dnd-character-sheets-b34d3.firebasestorage.app",
+  messagingSenderId: "789096168700",
+  appId: "1:789096168700:web:35657b8558a3ac693f6b79"
 };
 
-// Проверяем, загружен ли Firebase
-if (typeof firebase !== 'undefined') {
-    // Инициализируем только если не инициализирован
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-        console.log("✅ Firebase инициализирован с конфигом:", firebaseConfig.projectId);
-    } else {
-        console.log("ℹ️ Firebase уже инициализирован");
-    }
-} else {
-    console.error("❌ Firebase SDK не загружен!");
-}
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+// ==== НЕ ИЗМЕНЯЙТЕ КОД НИЖЕ ====
 
-// Экспортируем для удобства
-const auth = firebase.auth ? firebase.auth() : null;
-const db = firebase.firestore ? firebase.firestore() : null;
+// Инициализируем Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Экспортируем нужные модули
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// Для использования в других файлах
+window.firebaseAuth = auth;
+window.firebaseDb = db;
+window.firebaseStorage = storage;
+
+console.log("✅ Firebase инициализирован успешно!");
