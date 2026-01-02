@@ -1,91 +1,898 @@
+/* ===== ОСНОВНЫЕ НАСТРОЙКИ ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: #f8fafc;
-    min-height: 100vh;
+:root {
+    --parchment: #f5e9d4;
+    --old-paper: #e8d9b5;
+    --ink-black: #2c1810;
+    --ink-brown: #5d4037;
+    --gold: #d4af37;
+    --silver: #c0c0c0;
+    --ruby: #e0115f;
+    --emerald: #50c878;
+    --sapphire: #0f52ba;
+    --shadow-dark: rgba(0, 0, 0, 0.3);
+    --shadow-light: rgba(0, 0, 0, 0.1);
 }
 
+body {
+    font-family: 'Cinzel', serif;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(109, 76, 65, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #1a1208 0%, #2c1810 100%);
+    color: var(--ink-black);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Фоновый пергамент */
+.parchment-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M20,20 Q40,10 60,20 T100,20 L100,80 Q80,90 60,80 T20,80 Z" fill="%23f5e9d4" opacity="0.03"/></svg>'),
+        linear-gradient(45deg, transparent 98%, rgba(139, 69, 19, 0.1) 100%),
+        linear-gradient(-45deg, transparent 98%, rgba(139, 69, 19, 0.1) 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Основной контейнер */
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
 }
 
-header {
+/* ===== ШАПКА С ГЕРАЛЬДИКОЙ ===== */
+.main-header {
+    padding: 2rem 0;
+    position: relative;
+}
+
+.header-heraldry {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.heraldic-left, .heraldic-right {
+    flex: 0 0 auto;
+}
+
+.dragon-icon, .sword-icon {
+    font-size: 4rem;
+    filter: drop-shadow(2px 2px 4px var(--shadow-dark));
+    animation: gentleFloat 6s ease-in-out infinite;
+}
+
+.dragon-icon {
+    animation-delay: 0s;
+}
+
+.sword-icon {
+    animation-delay: 3s;
+}
+
+@keyframes gentleFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(5deg); }
+}
+
+.header-title {
+    text-align: center;
+    flex: 1;
+}
+
+.title-main {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 4rem;
+    color: var(--gold);
+    text-shadow: 
+        2px 2px 0 var(--ink-black),
+        4px 4px 0 rgba(139, 69, 19, 0.5);
+    margin-bottom: 0.5rem;
+    letter-spacing: 2px;
+}
+
+.title-sub {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1.2rem;
+    color: var(--silver);
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.header-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.divider-left, .divider-right {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    flex: 1;
+}
+
+.divider-center {
+    font-size: 1.5rem;
+    color: var(--gold);
+}
+
+/* Навигация */
+.main-nav {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1.5rem;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(139, 69, 19, 0.1) 15%, 
+        rgba(139, 69, 19, 0.2) 50%, 
+        rgba(139, 69, 19, 0.1) 85%, 
+        transparent 100%);
+    border-top: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    color: var(--old-paper);
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1.1rem;
+    border: 2px solid transparent;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--gold);
+    border-color: var(--gold);
+    background: rgba(139, 69, 19, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-icon {
+    font-size: 1.3rem;
+}
+
+.nav-button {
+    background: linear-gradient(135deg, var(--ruby), #8b0000);
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(224, 17, 95, 0.3);
+}
+
+.nav-button:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(224, 17, 95, 0.4);
+}
+
+/* ===== ГЕРОИЧЕСКИЙ РАЗДЕЛ ===== */
+.hero-section {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+    align-items: center;
+    padding: 3rem 0;
+    margin: 3rem 0;
+    position: relative;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M20,20 Q100,0 180,20 L180,180 Q100,200 20,180 Z" fill="%23f5e9d4" opacity="0.05"/></svg>');
+    border-radius: 20px;
+    z-index: -1;
+}
+
+.hero-banner {
+    padding: 2rem;
+    background: linear-gradient(135deg, 
+        rgba(139, 69, 19, 0.1) 0%, 
+        rgba(212, 175, 55, 0.05) 100%);
+    border-radius: 15px;
+    border: 2px solid var(--gold);
+    box-shadow: 
+        0 10px 30px var(--shadow-dark),
+        inset 0 0 50px rgba(212, 175, 55, 0.1);
+}
+
+.hero-title {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 3rem;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px var(--shadow-dark);
+    line-height: 1.2;
+}
+
+.hero-text {
+    font-size: 1.2rem;
+    color: var(--old-paper);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    font-family: 'Cinzel', serif;
+}
+
+/* Кнопки */
+.btn {
+    padding: 1rem 2rem;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-quest {
+    background: linear-gradient(135deg, var(--sapphire), #1a237e);
+    color: white;
+    border: 2px solid var(--sapphire);
+    box-shadow: 0 4px 15px rgba(15, 82, 186, 0.3);
+}
+
+.btn-quest:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(15, 82, 186, 0.4);
+}
+
+.btn-scroll {
+    background: transparent;
+    color: var(--old-paper);
+    border: 2px solid var(--old-paper);
+}
+
+.btn-scroll:hover {
+    background: rgba(139, 69, 19, 0.1);
+    transform: translateY(-3px);
+}
+
+.btn-magic {
+    background: linear-gradient(135deg, var(--emerald), #006400);
+    color: white;
+    border: 2px solid var(--emerald);
+    box-shadow: 0 4px 15px rgba(80, 200, 120, 0.3);
+}
+
+.btn-magic:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(80, 200, 120, 0.4);
+}
+
+.btn-icon {
+    font-size: 1.3rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.hero-features {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.feature-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(139, 69, 19, 0.2);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    color: var(--old-paper);
+    font-size: 0.9rem;
+}
+
+.badge-icon {
+    font-size: 1.2rem;
+}
+
+/* Иллюстрации героев */
+.hero-illustration {
+    position: relative;
+    width: 300px;
+    height: 400px;
+}
+
+.knight-silhouette, .mage-silhouette, .archer-silhouette {
+    position: absolute;
+    width: 200px;
+    height: 300px;
+    background: 
+        radial-gradient(circle at 50% 20%, rgba(212, 175, 55, 0.3) 0%, transparent 70%),
+        url('data:image/svg+xml;utf8,<svg width="200" height="300" xmlns="http://www.w3.org/2000/svg"><path d="M100,50 L150,150 L100,250 L50,150 Z" fill="rgba(139,69,19,0.1)"/></svg>');
+    filter: drop-shadow(2px 2px 10px rgba(0,0,0,0.5));
+}
+
+.knight-silhouette {
+    left: 0;
+    top: 0;
+    animation: knightBreath 4s ease-in-out infinite;
+}
+
+.mage-silhouette {
+    left: 50px;
+    top: 50px;
+    animation: mageFloat 5s ease-in-out infinite;
+}
+
+.archer-silhouette {
+    left: 100px;
+    top: 0;
+    animation: archerAim 6s ease-in-out infinite;
+}
+
+@keyframes knightBreath {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.05) translateY(-10px); }
+}
+
+@keyframes mageFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-20px) rotate(5deg); }
+    75% { transform: translateY(10px) rotate(-5deg); }
+}
+
+@keyframes archerAim {
+    0%, 100% { transform: translateX(0) scaleX(1); }
+    50% { transform: translateX(20px) scaleX(-1); }
+}
+
+/* ===== СВИТКИ ===== */
+.scrolls-section {
+    margin: 4rem 0;
+    padding: 2rem 0;
+}
+
+.section-header {
     text-align: center;
     margin-bottom: 3rem;
 }
 
-header h1 {
+.section-title {
+    font-family: 'UnifrakturMaguntia', cursive;
     font-size: 2.5rem;
-    color: #38bdf8;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.title-icon {
+    font-size: 3rem;
+    filter: drop-shadow(2px 2px 4px var(--shadow-dark));
+}
+
+.section-subtitle {
+    font-family: 'MedievalSharp', cursive;
+    color: var(--silver);
+    font-style: italic;
+    font-size: 1.2rem;
+}
+
+.scrolls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.scroll-card {
+    background: linear-gradient(135deg, var(--parchment), var(--old-paper));
+    border-radius: 10px;
+    padding: 2rem;
+    position: relative;
+    border: 1px solid var(--ink-brown);
+    box-shadow: 
+        0 10px 30px var(--shadow-dark),
+        inset 0 0 20px rgba(139, 69, 19, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.scroll-card:hover {
+    transform: translateY(-10px) rotate(1deg);
+    box-shadow: 
+        0 20px 40px var(--shadow-dark),
+        inset 0 0 30px rgba(212, 175, 55, 0.1);
+}
+
+.scroll-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--ruby), var(--emerald), var(--sapphire));
+}
+
+.scroll-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--ink-brown);
+}
+
+.scroll-icon {
+    font-size: 2rem;
+}
+
+.scroll-header h4 {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1.5rem;
+    color: var(--ink-black);
+}
+
+.scroll-content {
+    margin-bottom: 1.5rem;
+}
+
+.scroll-content p {
+    color: var(--ink-brown);
+    line-height: 1.6;
     margin-bottom: 1rem;
 }
 
-.hero {
-    background: rgba(30, 41, 59, 0.7);
-    border-radius: 1rem;
-    padding: 3rem;
+.scroll-list {
+    list-style: none;
+    padding-left: 1.5rem;
+}
+
+.scroll-list li {
+    color: var(--ink-brown);
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.scroll-list li::before {
+    content: '✧';
+    position: absolute;
+    left: -1.5rem;
+    color: var(--gold);
+}
+
+.scroll-seal {
     text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 0.5rem;
+    border-top: 1px dashed var(--ink-brown);
+    color: var(--ink-brown);
+    font-family: 'MedievalSharp', cursive;
+    font-size: 0.9rem;
+    font-style: italic;
 }
 
-.hero h2 {
-    font-size: 2rem;
+/* Призыв к действию */
+.cta-section {
+    margin: 4rem 0;
+    padding: 3rem;
+    background: linear-gradient(135deg, 
+        rgba(139, 69, 19, 0.2) 0%, 
+        rgba(212, 175, 55, 0.1) 100%);
+    border-radius: 15px;
+    border: 2px solid var(--gold);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-section::before {
+    content: '⚔️ 🛡️ 📜 🏹 🧙‍♂️';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8rem;
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.cta-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.cta-text h3 {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 2.5rem;
+    color: var(--gold);
+    margin-bottom: 1rem;
+}
+
+.cta-text p {
+    color: var(--old-paper);
+    font-size: 1.2rem;
+    max-width: 600px;
+}
+
+/* ===== ПОДВАЛ ===== */
+.main-footer {
+    margin-top: 4rem;
+    padding: 3rem 0;
+    border-top: 2px solid var(--gold);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
     margin-bottom: 2rem;
-    color: #7dd3fc;
 }
 
-.buttons {
+.footer-section h5 {
+    font-family: 'MedievalSharp', cursive;
+    color: var(--gold);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.footer-section p {
+    color: var(--silver);
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.footer-note {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--old-paper) !important;
+}
+
+.footer-symbols {
     display: flex;
     gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
+    font-size: 2rem;
+    margin-top: 1rem;
 }
 
-.btn {
-    padding: 1rem 2rem;
-    border-radius: 0.5rem;
+.footer-link {
+    display: block;
+    color: var(--old-paper);
     text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-    display: inline-block;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
 }
 
-.login-btn {
-    background: #3b82f6;
-    color: white;
+.footer-link:hover {
+    color: var(--gold);
+    text-decoration: underline;
 }
 
-.login-btn:hover {
-    background: #2563eb;
-    transform: translateY(-2px);
-}
-
-.register-btn {
-    background: transparent;
-    color: #38bdf8;
-    border: 2px solid #38bdf8;
-}
-
-.register-btn:hover {
-    background: rgba(56, 189, 248, 0.1);
-    transform: translateY(-2px);
-}
-
-footer {
+.footer-bottom {
     text-align: center;
-    margin-top: 3rem;
-    color: #94a3b8;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(139, 69, 19, 0.3);
+    color: var(--silver);
     font-size: 0.9rem;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.parchment-modal {
+    background: 
+        linear-gradient(135deg, var(--parchment), var(--old-paper)),
+        url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M10,10 Q50,0 90,10 L90,90 Q50,100 10,90 Z" fill="rgba(139,69,19,0.1)"/></svg>');
+    padding: 3rem;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    border: 3px solid var(--ink-brown);
+    box-shadow: 
+        0 20px 60px var(--shadow-dark),
+        inset 0 0 30px rgba(139, 69, 19, 0.2);
+}
+
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--ruby);
+    color: white;
+    border: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+    transform: rotate(90deg) scale(1.1);
+    background: #8b0000;
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--ink-brown);
+}
+
+.modal-title {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 2.5rem;
+    color: var(--ink-black);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.modal-subtitle {
+    font-family: 'MedievalSharp', cursive;
+    color: var(--ink-brown);
+    font-style: italic;
+}
+
+.scribe-form {
+    margin-bottom: 2rem;
+}
+
+.scribe-form h4 {
+    font-family: 'MedievalSharp', cursive;
+    color: var(--ink-black);
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.form-field {
+    margin-bottom: 1.5rem;
+}
+
+.form-field label {
+    display: block;
+    color: var(--ink-brown);
+    margin-bottom: 0.5rem;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 0.9rem;
+}
+
+.form-field input {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid var(--ink-brown);
+    border-radius: 5px;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    color: var(--ink-black);
+    transition: all 0.3s ease;
+}
+
+.form-field input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+}
+
+.form-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--ink-brown);
+}
+
+.form-switch a {
+    color: var(--sapphire);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.form-switch a:hover {
+    text-decoration: underline;
+}
+
+.guest-option {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed var(--ink-brown);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--sapphire);
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.btn-link:hover {
+    color: var(--emerald);
+}
+
+.guest-option small {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--ink-brown);
+    font-size: 0.8rem;
+}
+
+.scribe-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+    font-family: 'MedievalSharp', cursive;
+    display: none;
+}
+
+.scribe-message.success {
+    background: rgba(80, 200, 120, 0.2);
+    border: 2px solid var(--emerald);
+    color: var(--ink-black);
+    display: block;
+}
+
+.scribe-message.error {
+    background: rgba(224, 17, 95, 0.2);
+    border: 2px solid var(--ruby);
+    color: var(--ink-black);
+    display: block;
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 1024px) {
+    .hero-section {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .hero-illustration {
+        margin: 0 auto;
+    }
+    
+    .title-main {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-nav {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .feature-badge {
+        flex: 1;
+        min-width: 150px;
+        justify-content: center;
+    }
+    
+    .cta-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .title-main {
+        font-size: 2.5rem;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .header-heraldry {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .dragon-icon, .sword-icon {
+        font-size: 3rem;
+    }
+    
+    .title-main {
+        font-size: 2rem;
+    }
+    
+    .scrolls-grid {
+        grid-template-columns: 1fr;
+    }
 }
