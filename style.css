@@ -369,3 +369,77 @@ body {
         justify-content: center;
     }
 }
+/* ===== ВРЕМЕННАЯ ПАНЕЛЬ УПРАВЛЕНИЯ ===== */
+.dashboard-preview {
+    padding: 40px;
+    background: var(--secondary-dark);
+    border-radius: 15px;
+    border: 2px solid var(--border-color);
+    margin: 40px 0;
+}
+
+.dashboard-preview h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--accent-gold);
+}
+
+.user-info {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: var(--primary-dark);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.user-info p {
+    font-size: 1.1rem;
+    margin: 10px 0;
+    color: var(--text-light);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin: 40px 0;
+}
+
+.dashboard-card {
+    background: var(--primary-dark);
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.dashboard-card:hover {
+    border-color: var(--accent-gold);
+    transform: translateY(-5px);
+}
+
+.dashboard-card h3 {
+    color: var(--text-light);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-card p {
+    color: var(--text-gray);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.dashboard-card .btn {
+    width: 100%;
+}
+
+.logout-section {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid var(--border-color);
+}
