@@ -1,0 +1,135 @@
+/* ===== СТИЛИ АВТОРИЗАЦИИ ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--secondary-dark);
+    border-radius: 15px;
+    padding: 40px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--text-gray);
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.close-modal:hover {
+    background: var(--border-color);
+    color: var(--text-light);
+}
+
+.auth-form {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-form h3 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--text-light);
+    font-size: 1.8rem;
+}
+
+.auth-form input,
+.auth-form select {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: var(--primary-dark);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.auth-form input:focus,
+.auth-form select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.auth-form select option {
+    background: var(--primary-dark);
+    color: var(--text-light);
+}
+
+.auth-form button[type="submit"] {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 25px;
+    color: var(--text-gray);
+}
+
+.auth-switch a {
+    color: var(--accent-gold);
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+.message {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    display: none;
+    font-weight: bold;
+}
+
+.message.success {
+    background: rgba(16, 185, 129, 0.2);
+    border: 2px solid var(--accent-green);
+    color: var(--accent-green);
+    display: block;
+}
+
+.message.error {
+    background: rgba(239, 68, 68, 0.2);
+    border: 2px solid var(--accent-red);
+    color: var(--accent-red);
+    display: block;
+}
