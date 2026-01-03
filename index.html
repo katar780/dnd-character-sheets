@@ -3,119 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Персонаж-Конструктор RPG</title>
+    <meta name="theme-color" content="#121212">
+    <title>RPG Campaign Hub</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDK (замени на свои ключи из консоли Firebase) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Манифест для PWA (создадим позже) -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <header>
-        <h1>Персонаж-Конструктор RPG</h1>
-        <div id="auth-section">
-            <button id="login-btn">Войти</button>
-            <button id="register-btn">Регистрация</button>
-            <button id="logout-btn" style="display: none;">Выйти</button>
-            <span id="user-info"></span>
+    <!-- Лендинг для неавторизованных -->
+    <section id="landing" class="container">
+        <div class="hero">
+            <h1>RPG Campaign Hub</h1>
+            <p class="subtitle">Удобное место для хранения персонажей, опыта, даунтайма и истории твоих RPG-кампаний</p>
+            <p class="description">
+                Забудь про Google-таблицы и потерянные заметки.<br>
+                Мастера начисляют опыт одним кликом.<br>
+                Игроки всегда видят актуальные статы и полную хронологию приключений.
+            </p>
+            <div class="auth-buttons">
+                <button id="login-btn" class="btn primary">Войти</button>
+                <button id="register-btn" class="btn secondary">Зарегистрироваться</button>
+            </div>
         </div>
-        <!-- Модальное окно для входа/регистрации -->
-<div id="auth-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span id="close-modal" class="close">&times;</span>
-        <h2 id="modal-title">Войти</h2>
-        <input type="email" id="auth-email" placeholder="Email" required>
-        <input type="password" id="auth-password" placeholder="Пароль (мин. 6 символов)" required>
-        <button id="auth-submit">Войти</button>
-        <p id="switch-text">Нет аккаунта? <a href="#" id="switch-mode">Зарегистрироваться</a></p>
-    </div>
-</div>
-    </header>
+        <footer>
+            <p>Поддержка D&D, Pathfinder и других систем — скоро!</p>
+        </footer>
+    </section>
 
-    <main>
-        <section id="constructor">
-            <h2>Создай своего героя</h2>
+    <!-- Дашборд для авторизованных (скрыт по умолчанию) -->
+    <section id="dashboard" class="container" style="display: none;">
+        <header class="dash-header">
+            <h2>Привет, <span id="user-email"></span>!</h2>
+            <button id="logout-btn" class="btn small">Выйти</button>
+        </header>
+        
+        <div class="content">
+            <h3>Твои кампании и персонажи</h3>
+            <p class="placeholder">Пока здесь пусто. Присоединяйся к кампании или создай свою (скоро будет доступно!)</p>
             
-            <!-- Выбор расы -->
-            <div class="section">
-                <h3>Раса</h3>
-                <select id="race">
-                    <option value="human">Человек</option>
-                    <option value="elf">Эльф</option>
-                    <option value="dwarf">Гном</option>
-                    <option value="orc">Орк</option>
-                </select>
+            <div class="quick-actions">
+                <button class="btn primary" disabled>Создать кампанию (для мастеров)</button>
+                <button class="btn secondary" disabled>Присоединиться по ссылке</button>
             </div>
-            
-            <!-- Выбор класса -->
-            <div class="section">
-                <h3>Класс</h3>
-                <select id="class">
-                    <option value="warrior">Воин</option>
-                    <option value="mage">Маг</option>
-                    <option value="archer">Лучник</option>
-                    <option value="priest">Жрец</option>
-                </select>
-            </div>
-            
-            <!-- Кастомизация внешности -->
-            <div class="section">
-                <h3>Внешность</h3>
-                <label>Цвет волос: <input type="color" id="hair-color" value="#000000"></label>
-                <label>Цвет глаз: <input type="color" id="eye-color" value="#00ff00"></label>
-            </div>
-            
-            <!-- Характеристики (всего 20 очков на распределение) -->
-            <div class="section">
-                <h3>Характеристики (20 очков)</h3>
-                <label>Сила: <input type="number" id="strength" min="1" max="10" value="5"></label>
-                <label>Ловкость: <input type="number" id="dexterity" min="1" max="10" value="5"></label>
-                <label>Интеллект: <input type="number" id="intelligence" min="1" max="10" value="5"></label>
-                <label>Остаток: <span id="points-left">5</span></label>
-            </div>
-            
-            <!-- Навыки -->
-            <div class="section">
-                <h3>Навыки (выбери 3)</h3>
-                <input type="checkbox" id="skill1" value="Бой на мечах"> Бой на мечах<br>
-                <input type="checkbox" id="skill2" value="Магия огня"> Магия огня<br>
-                <input type="checkbox" id="skill3" value="Стрельба из лука"> Стрельба из лука<br>
-                <input type="checkbox" id="skill4" value="Исцеление"> Исцеление<br>
-            </div>
-            
-            <!-- Визуализация -->
-            <div class="section">
-                <h3>Превью</h3>
-                <canvas id="preview" width="300" height="400"></canvas>
-            </div>
-            
-            <!-- Кнопки -->
-            <button id="save-local">Сохранить локально</button>
-            <button id="save-cloud" style="display: none;">Сохранить в облаке</button>
-            <button id="export-png">Экспорт PNG</button>
-        </section>
-    </main>
+        </div>
+    </section>
+
+    <!-- Модальное окно авторизации -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2 id="modal-title">Войти</h2>
+            <input type="email" id="auth-email" placeholder="Email" required>
+            <input type="password" id="auth-password" placeholder="Пароль (мин. 6 символов)" required>
+            <button id="auth-submit" class="btn primary">Войти</button>
+            <p id="switch-text" class="switch">
+                Нет аккаунта? <a href="#" id="switch-mode">Зарегистрироваться</a>
+            </p>
+        </div>
+    </div>
 
     <script src="script.js"></script>
-  <script>
-    // Твой реальный Firebase config из скриншота
-    const firebaseConfig = {
-        apiKey: "AIzaSyCF399qSkS0TGuQD87JOhp9JsnuDdZeSI",
-        authDomain: "dnd-character-sheets-b34d3.firebaseapp.com",
-        projectId: "dnd-character-sheets-b34d3",
-        storageBucket: "dnd-character-sheets-b34d3.appspot.com",
-        messagingSenderId: "78996168700",
-        appId: "1:78996168700:web:35657b8558a3ac693f6b79"
-    };
-
-    // Инициализация Firebase
-    firebase.initializeApp(firebaseConfig);
-
-    // Для удобства — вынесем в глобальные переменные
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
-</script>
 </body>
 </html>
