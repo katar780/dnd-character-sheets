@@ -87,17 +87,24 @@
     </main>
 
     <script src="script.js"></script>
-    <script>
-        // Инициализация Firebase (замени на свои конфиги)
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-    </script>
+  <script>
+    // Твой реальный Firebase config из скриншота
+    const firebaseConfig = {
+        apiKey: "AIzaSyCF399qSkS0TGuQD87JOhp9JsnuDdZeSI",
+        authDomain: "dnd-character-sheets-b34d3.firebaseapp.com",
+        projectId: "dnd-character-sheets-b34d3",
+        storageBucket: "dnd-character-sheets-b34d3.appspot.com",
+        messagingSenderId: "78996168700",
+        appId: "1:78996168700:web:35657b8558a3ac693f6b79"
+    };
+
+    // Инициализация Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Для удобства — вынесем в глобальные переменные
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+</script>
 </body>
 </html>
