@@ -1,6 +1,6 @@
 // js/firebase-config.js
 
-// ===== ВАШИ РЕАЛЬНЫЕ ДАННЫЕ FIREBASE =====
+// ===== КОНФИГУРАЦИЯ FIREBASE =====
 const firebaseConfig = {
     apiKey: "AIzaSyCF399qSKsQTGuQd87J0hp9JsnuDdDZe5I",
     authDomain: "dnd-character-sheets-b34d3.firebaseapp.com",
@@ -10,98 +10,80 @@ const firebaseConfig = {
     appId: "1:789096168700:web:35667b8558a3ac693f6b79"
 };
 
-// ===== ПРОВЕРКА ЗАГРУЗКИ FIREBASE SDK =====
-if (typeof firebase === 'undefined') {
-    console.error('❌ Firebase SDK не загружен! Проверьте:');
-    console.error('1. Подключение к интернету');
-    console.error('2. Что скрипты Firebase загружаются в HTML');
-    console.error('3. Блокировку рекламы/скриптов');
-    
-    // Создаем заглушки для оффлайн режима
-    window.firebaseAuth = createMockAuth();
-    window.firebaseDb = createMockDb();
-    
-    console.warn('⚠️ Используется локальный режим (данные сохраняются только в этом браузере)');
-} else {
-    // ===== ИНИЦИАЛИЗАЦИЯ FIREBASE =====
-    try {
-        // Инициализируем Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        
-        // Получаем нужные сервисы
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const firestore = firebase.firestore;
-        
-        // Настраиваем Firestore
-        if (window.location.hostname === "localhost") {
-            // Режим разработки
-            db.settings({
-                experimentalForceLongPolling: true
-            });
-        }
-        
-        // Экспортируем для использования
-        window.firebaseAuth = auth;
-        window.firebaseDb = db;
-        window.firestore = firestore;
-        
-        console.log('✅ Firebase успешно инициализирован!');
-        console.log('📁 Проект:', firebaseConfig.projectId);
-        
-        // Проверяем подключение
-        testFirebaseConnection();
-        
-    } catch (error) {
-        console.error('❌ Ошибка инициализации Firebase:', error);
-        
-        // Используем заглушки при ошибке
-        window.firebaseAuth = createMockAuth();
-        window.firebaseDb = createMockDb();
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+let firebaseApp, firebaseAuth, firebaseDb;
+
+try {
+    if (typeof firebase === 'undefined') {
+        throw new Error('Firebase SDK не загружен. Проверьте подключение скриптов в HTML.');
     }
+    
+    // Инициализируем Firebase
+    firebaseApp = firebase.initializeApp(firebaseConfig);
+    firebaseAuth = firebase.auth();
+    firebaseDb = firebase.firestore();
+    
+    // Настройки Firestore для разработки
+    if (window.location.hostname === "localhost") {
+        firebaseDb.settings({
+            experimentalForceLongPolling: true,
+            merge: true
+        });
+    }
+    
+    console.log('✅ Firebase успешно инициализирован');
+    console.log('📁 Проект:', firebaseConfig.projectId);
+    
+} catch (error) {
+    console.error('❌ Ошибка инициализации Firebase:', error);
+    console.warn('⚠️ Работа в оффлайн режиме');
+    
+    // Создаем заглушки
+    firebaseAuth = createMockAuth();
+    firebaseDb = createMockFirestore();
 }
 
-// ===== ФУНКЦИИ ДЛЯ ЗАГЛУШЕК =====
+// ===== ЭКСПОРТ ГЛОБАЛЬНЫХ ПЕРЕМЕННЫХ =====
+window.firebaseApp = firebaseApp;
+window.firebaseAuth = firebaseAuth;
+window.firebaseDb = firebaseDb;
 
+// ===== ЗАГЛУШКИ ДЛЯ ОФФЛАЙН РЕЖИМА =====
 function createMockAuth() {
-    console.log('🎮 Создан моковый Auth для оффлайн режима');
+    console.log('🔧 Создан моковый Auth');
     
     return {
         currentUser: null,
         
         onAuthStateChanged(callback) {
-            // Проверяем localStorage
-            const user = JSON.parse(localStorage.getItem('astralum_user') || 'null');
+            const user = JSON.parse(localStorage.getItem('campaign_user') || 'null');
             if (user) {
                 this.currentUser = user;
+                callback(user);
+            } else {
+                callback(null);
             }
             
-            // Вызываем callback сразу
-            callback(this.currentUser);
-            
-            // Возвращаем функцию отписки
+            // Симуляция подписки
             return () => {};
         },
         
         signInWithEmailAndPassword(email, password) {
-            console.log('🔐 Моковый вход:', email);
-            
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
-                    // Проверяем существующего пользователя
-                    const users = JSON.parse(localStorage.getItem('astralum_users') || '{}');
+                    const users = JSON.parse(localStorage.getItem('campaign_users') || '{}');
                     
                     if (users[email] && users[email].password === password) {
                         const user = {
                             uid: 'mock_' + Date.now(),
                             email: email,
-                            displayName: users[email].name || email.split('@')[0],
+                            displayName: users[email].name,
+                            role: users[email].role,
                             isMock: true
                         };
                         
                         this.currentUser = user;
-                        localStorage.setItem('astralum_user', JSON.stringify(user));
-                        
+                        localStorage.setItem('campaign_user', JSON.stringify(user));
                         resolve({ user });
                     } else {
                         reject(new Error('auth/user-not-found'));
@@ -111,19 +93,16 @@ function createMockAuth() {
         },
         
         createUserWithEmailAndPassword(email, password) {
-            console.log('📝 Моковая регистрация:', email);
-            
             return new Promise((resolve) => {
                 setTimeout(() => {
-                    // Сохраняем в моковую базу
-                    const users = JSON.parse(localStorage.getItem('astralum_users') || '{}');
+                    const users = JSON.parse(localStorage.getItem('campaign_users') || '{}');
                     users[email] = {
                         email: email,
                         password: password,
                         name: email.split('@')[0],
                         createdAt: new Date().toISOString()
                     };
-                    localStorage.setItem('astralum_users', JSON.stringify(users));
+                    localStorage.setItem('campaign_users', JSON.stringify(users));
                     
                     const user = {
                         uid: 'mock_' + Date.now(),
@@ -133,8 +112,7 @@ function createMockAuth() {
                     };
                     
                     this.currentUser = user;
-                    localStorage.setItem('astralum_user', JSON.stringify(user));
-                    
+                    localStorage.setItem('campaign_user', JSON.stringify(user));
                     resolve({ user });
                 }, 500);
             });
@@ -142,296 +120,237 @@ function createMockAuth() {
         
         signOut() {
             return new Promise((resolve) => {
-                setTimeout(() => {
-                    this.currentUser = null;
-                    localStorage.removeItem('astralum_user');
-                    resolve();
-                }, 300);
+                this.currentUser = null;
+                localStorage.removeItem('campaign_user');
+                resolve();
             });
         }
     };
 }
 
-function createMockDb() {
-    console.log('💾 Создан моковый Firestore для оффлайн режима');
+function createMockFirestore() {
+    console.log('🔧 Создан моковый Firestore');
     
     return {
-        collection(name) {
+        collection(collectionName) {
             return {
-                doc(id) {
+                doc(docId) {
                     return {
                         set(data, options = {}) {
-                            return new Promise((resolve) => {
-                                setTimeout(() => {
-                                    const key = `mock_${name}_${id}`;
-                                    
-                                    if (options.merge) {
-                                        // Объединяем с существующими данными
-                                        const existing = JSON.parse(localStorage.getItem(key) || '{}');
-                                        localStorage.setItem(key, JSON.stringify({ ...existing, ...data }));
-                                    } else {
-                                        localStorage.setItem(key, JSON.stringify(data));
-                                    }
-                                    
-                                    console.log('💾 Моковое сохранение:', name, id, data);
-                                    resolve();
-                                }, 300);
-                            });
+                            const key = `mock_${collectionName}_${docId}`;
+                            
+                            if (options.merge) {
+                                const existing = JSON.parse(localStorage.getItem(key) || '{}');
+                                localStorage.setItem(key, JSON.stringify({ ...existing, ...data }));
+                            } else {
+                                localStorage.setItem(key, JSON.stringify(data));
+                            }
+                            
+                            console.log('💾 Моковое сохранение:', collectionName, docId);
+                            return Promise.resolve();
                         },
                         
                         get() {
-                            return new Promise((resolve) => {
-                                setTimeout(() => {
-                                    const key = `mock_${name}_${id}`;
-                                    const data = localStorage.getItem(key);
-                                    
-                                    resolve({
-                                        exists: !!data,
-                                        data: () => JSON.parse(data || '{}'),
-                                        id: id
-                                    });
-                                }, 200);
+                            const key = `mock_${collectionName}_${docId}`;
+                            const data = localStorage.getItem(key);
+                            
+                            return Promise.resolve({
+                                exists: !!data,
+                                data: () => JSON.parse(data || '{}'),
+                                id: docId
                             });
                         },
                         
                         update(data) {
-                            return new Promise((resolve) => {
-                                setTimeout(() => {
-                                    const key = `mock_${name}_${id}`;
-                                    const existing = JSON.parse(localStorage.getItem(key) || '{}');
-                                    localStorage.setItem(key, JSON.stringify({ ...existing, ...data }));
-                                    
-                                    console.log('🔄 Моковое обновление:', name, id, data);
-                                    resolve();
-                                }, 300);
-                            });
+                            const key = `mock_${collectionName}_${docId}`;
+                            const existing = JSON.parse(localStorage.getItem(key) || '{}');
+                            localStorage.setItem(key, JSON.stringify({ ...existing, ...data }));
+                            
+                            return Promise.resolve();
                         },
                         
                         delete() {
-                            return new Promise((resolve) => {
-                                setTimeout(() => {
-                                    const key = `mock_${name}_${id}`;
-                                    localStorage.removeItem(key);
-                                    resolve();
-                                }, 200);
-                            });
+                            const key = `mock_${collectionName}_${docId}`;
+                            localStorage.removeItem(key);
+                            return Promise.resolve();
                         }
                     };
                 },
                 
                 add(data) {
-                    return new Promise((resolve) => {
-                        setTimeout(() => {
-                            const id = 'mock_' + Date.now() + Math.random().toString(36).substr(2, 9);
-                            const key = `mock_${name}_${id}`;
-                            localStorage.setItem(key, JSON.stringify(data));
-                            
-                            console.log('➕ Моковое добавление:', name, id);
-                            resolve({ id: id });
-                        }, 300);
+                    const docId = 'mock_' + Date.now();
+                    const key = `mock_${collectionName}_${docId}`;
+                    localStorage.setItem(key, JSON.stringify(data));
+                    
+                    return Promise.resolve({
+                        id: docId
                     });
                 },
                 
                 where(field, operator, value) {
                     return {
                         get() {
-                            return new Promise((resolve) => {
-                                setTimeout(() => {
-                                    // Фильтрация моковых данных (упрощенная)
-                                    const prefix = `mock_${name}_`;
-                                    const results = [];
-                                    
-                                    for (let i = 0; i < localStorage.length; i++) {
-                                        const key = localStorage.key(i);
-                                        if (key.startsWith(prefix)) {
-                                            const data = JSON.parse(localStorage.getItem(key));
-                                            if (this.filterData(data, field, operator, value)) {
-                                                results.push({
-                                                    id: key.replace(prefix, ''),
-                                                    data: () => data
-                                                });
-                                            }
-                                        }
-                                    }
-                                    
-                                    resolve({
-                                        docs: results,
-                                        empty: results.length === 0
-                                    });
-                                }, 400);
-                            });
-                        },
-                        
-                        filterData(data, field, operator, value) {
-                            // Простая фильтрация
-                            if (!(field in data)) return false;
+                            const prefix = `mock_${collectionName}_`;
+                            const results = [];
                             
-                            switch(operator) {
-                                case '==': return data[field] === value;
-                                case '!=': return data[field] !== value;
-                                case '>': return data[field] > value;
-                                case '<': return data[field] < value;
-                                case '>=': return data[field] >= value;
-                                case '<=': return data[field] <= value;
-                                case 'array-contains': return Array.isArray(data[field]) && data[field].includes(value);
-                                default: return false;
+                            for (let i = 0; i < localStorage.length; i++) {
+                                const key = localStorage.key(i);
+                                if (key.startsWith(prefix)) {
+                                    const data = JSON.parse(localStorage.getItem(key));
+                                    const docId = key.replace(prefix, '');
+                                    
+                                    if (filterData(data, field, operator, value)) {
+                                        results.push({
+                                            id: docId,
+                                            data: () => data
+                                        });
+                                    }
+                                }
                             }
+                            
+                            return Promise.resolve({
+                                docs: results,
+                                empty: results.length === 0
+                            });
                         }
                     };
+                    
+                    function filterData(data, field, operator, value) {
+                        if (!(field in data)) return false;
+                        
+                        switch(operator) {
+                            case '==': return data[field] == value;
+                            case '!=': return data[field] != value;
+                            case '>': return data[field] > value;
+                            case '<': return data[field] < value;
+                            case '>=': return data[field] >= value;
+                            case '<=': return data[field] <= value;
+                            default: return false;
+                        }
+                    }
                 }
             };
         }
     };
 }
 
-// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
-
-async function testFirebaseConnection() {
-    try {
-        // Проверяем подключение к Firestore
-        await window.firebaseDb.collection('connection_test').doc('test').set({
-            test: true,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        console.log('📡 Связь с Firestore установлена');
-        
-        // Удаляем тестовый документ
-        await window.firebaseDb.collection('connection_test').doc('test').delete();
-        
-    } catch (error) {
-        console.warn('⚠️ Firestore недоступен:', error.message);
-        console.info('ℹ️ Используется локальное хранилище');
-    }
-}
-
-// ===== ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ ИСПОЛЬЗОВАНИЯ =====
+// ===== УТИЛИТНЫЕ ФУНКЦИИ =====
 
 /**
- * Сохраняет данные в Firebase или локально
+ * Получить текущего пользователя
  */
-window.saveToChronicle = async (collection, docId, data) => {
-    try {
-        const user = window.getCurrentUser();
-        
-        // Добавляем метаданные
-        const dataWithMeta = {
-            ...data,
-            updatedAt: new Date().toISOString(),
-            ownerId: user?.uid || 'guest'
-        };
-        
-        if (window.firebaseDb && user && !user.isMock) {
-            // Сохраняем в Firebase
-            await window.firebaseDb.collection(collection).doc(docId).set(dataWithMeta, { merge: true });
-            console.log('☁️ Сохранено в облако:', collection, docId);
-            return { success: true, source: 'firebase' };
-        } else {
-            // Сохраняем локально
-            const key = `chronicle_${collection}_${docId}`;
-            localStorage.setItem(key, JSON.stringify(dataWithMeta));
-            console.log('💾 Сохранено локально:', collection, docId);
-            return { success: true, source: 'local' };
-        }
-    } catch (error) {
-        console.error('❌ Ошибка сохранения:', error);
-        return { success: false, error: error.message };
-    }
-};
-
-/**
- * Загружает данные из Firebase или локально
- */
-window.loadFromChronicle = async (collection, docId) => {
-    try {
-        const user = window.getCurrentUser();
-        
-        if (window.firebaseDb && user && !user.isMock) {
-            // Загружаем из Firebase
-            const doc = await window.firebaseDb.collection(collection).doc(docId).get();
-            
-            if (doc.exists) {
-                console.log('☁️ Загружено из облака:', collection, docId);
-                return { data: doc.data(), source: 'firebase' };
-            }
-        }
-        
-        // Загружаем локально
-        const key = `chronicle_${collection}_${docId}`;
-        const data = localStorage.getItem(key);
-        
-        if (data) {
-            console.log('💾 Загружено локально:', collection, docId);
-            return { data: JSON.parse(data), source: 'local' };
-        }
-        
-        return { data: null, source: 'none' };
-        
-    } catch (error) {
-        console.error('❌ Ошибка загрузки:', error);
-        return { data: null, source: 'error', error: error.message };
-    }
-};
-
-/**
- * Получает текущего пользователя
- */
-window.getCurrentUser = () => {
-    // Сначала проверяем Firebase
+window.getCurrentUser = function() {
     if (window.firebaseAuth && window.firebaseAuth.currentUser) {
         return window.firebaseAuth.currentUser;
     }
     
-    // Затем проверяем localStorage
-    const savedUser = localStorage.getItem('astralum_user');
+    const savedUser = localStorage.getItem('campaign_user');
     if (savedUser) {
-        return JSON.parse(savedUser);
+        const user = JSON.parse(savedUser);
+        return user.isMock ? user : null;
     }
     
     return null;
 };
 
 /**
- * Выход из системы
+ * Проверить, является ли пользователь мастером
  */
-window.logoutFromChronicles = async () => {
+window.isMaster = function() {
+    const user = window.getCurrentUser();
+    return user && (user.role === 'master' || user.role === 'both');
+};
+
+/**
+ * Проверить, является ли пользователь игроком
+ */
+window.isPlayer = function() {
+    const user = window.getCurrentUser();
+    return user && (user.role === 'player' || user.role === 'both');
+};
+
+/**
+ * Сохранить данные
+ */
+window.saveData = async function(collection, docId, data) {
     try {
-        if (window.firebaseAuth && window.firebaseAuth.signOut) {
-            await window.firebaseAuth.signOut();
+        const user = window.getCurrentUser();
+        
+        if (!user) {
+            throw new Error('Пользователь не авторизован');
         }
         
-        localStorage.removeItem('astralum_user');
-        console.log('👋 Выход выполнен');
+        const dataWithMeta = {
+            ...data,
+            updatedAt: new Date().toISOString(),
+            updatedBy: user.uid
+        };
         
-        // Обновляем страницу для очистки состояния
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
-        
-        return true;
+        if (window.firebaseDb && !user.isMock) {
+            await window.firebaseDb.collection(collection).doc(docId).set(dataWithMeta, { merge: true });
+            return { success: true, source: 'firebase' };
+        } else {
+            const key = `data_${collection}_${docId}`;
+            localStorage.setItem(key, JSON.stringify(dataWithMeta));
+            return { success: true, source: 'local' };
+        }
     } catch (error) {
-        console.error('❌ Ошибка выхода:', error);
-        return false;
+        console.error('Ошибка сохранения:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Загрузить данные
+ */
+window.loadData = async function(collection, docId) {
+    try {
+        const user = window.getCurrentUser();
+        
+        if (window.firebaseDb && user && !user.isMock) {
+            const doc = await window.firebaseDb.collection(collection).doc(docId).get();
+            
+            if (doc.exists) {
+                return { success: true, data: doc.data(), source: 'firebase' };
+            }
+        }
+        
+        const key = `data_${collection}_${docId}`;
+        const data = localStorage.getItem(key);
+        
+        if (data) {
+            return { success: true, data: JSON.parse(data), source: 'local' };
+        }
+        
+        return { success: false, error: 'Данные не найдены', source: 'none' };
+        
+    } catch (error) {
+        console.error('Ошибка загрузки:', error);
+        return { success: false, error: error.message, source: 'error' };
     }
 };
 
 // ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     const user = window.getCurrentUser();
     
     if (user) {
-        console.log('📖 Добро пожаловать, летописец', user.email || user.displayName || 'Гость');
-    } else {
-        console.log('🏰 Добро пожаловать в Хроники Астралума');
+        console.log('👤 Текущий пользователь:', user.email);
     }
     
-    // Проверяем состояние Firebase
+    // Проверка состояния аутентификации
     if (window.firebaseAuth && window.firebaseAuth.onAuthStateChanged) {
-        window.firebaseAuth.onAuthStateChanged((user) => {
+        window.firebaseAuth.onAuthStateChanged(function(user) {
             if (user) {
-                console.log('👤 Firebase: пользователь авторизован', user.email);
+                console.log('✅ Пользователь Firebase авторизован:', user.email);
+                localStorage.setItem('campaign_user', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    role: localStorage.getItem(`user_role_${user.uid}`) || 'player'
+                }));
             } else {
-                console.log('👤 Firebase: пользователь не авторизован');
+                console.log('👤 Пользователь Firebase не авторизован');
             }
         });
     }
