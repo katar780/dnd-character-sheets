@@ -40,21 +40,100 @@ auth.onAuthStateChanged(user => {
         saveCloudBtn.style.display = 'none';
     }
 });
+// === НОВАЯ ЛОГИКА АВТОРИЗАЦИИ С КРАСИВОЙ МОДАЛКОЙ ===
 
-loginBtn.addEventListener('click', () => {
-    const email = prompt('Email:');
-    const password = prompt('Пароль:');
-    auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+// Элементы модального окна
+const modal = document.getElementById('auth-modal');
+const modalTitle = document.getElementById('modal-title');
+const authSubmit = document.getElementById('auth-submit');
+const switchMode = document.getElementById('switch-mode'); // будем перехватывать клик по ссылке
+const switchText = document.getElementById('switch-text');
+const closeModal = document.getElementById('close-modal');
+const authEmail = document.getElementById('auth-email');
+const authPassword = document.getElementById('auth-password');
+
+let isLogin = true; // true = вход, false = регистрация
+
+// Функция открытия модалки
+function openAuthModal(login = true) {
+    isLogin = login;
+    modalTitle.textContent = isLogin ? 'Войти' : 'Регистрация';
+    authSubmit.textContent = isLogin ? 'Войти' : 'Зарегистрироваться';
+    switchText.innerHTML = isLogin 
+        ? 'Нет аккаунта? <a href="#" id="switch-mode">Зарегистрироваться</a>'
+        : 'Уже есть аккаунт? <a href="#" id="switch-mode">Войти</a>';
+    
+    // Очищаем поля
+    authEmail.value = '';
+    authPassword.value = '';
+    
+    modal.style.display = 'flex';
+}
+
+// Открытие по кнопкам в хедере
+loginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openAuthModal(true);
 });
 
-registerBtn.addEventListener('click', () => {
-    const email = prompt('Email:');
-    const password = prompt('Пароль:');
-    auth.createUserWithEmailAndPassword(email, password).catch(err => alert(err.message));
+registerBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openAuthModal(false);
 });
 
-logoutBtn.addEventListener('click', () => auth.signOut());
+// Переключение между входом и регистрацией
+document.body.addEventListener('click', (e) => {
+    if (e.target.id === 'switch-mode') {
+        e.preventDefault();
+        openAuthModal(!isLogin);
+    }
+});
 
+// Закрытие модалки
+closeModal.addEventListener('click', () => {
+    modal.style.display = 'none';
+});
+
+window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
+// Обработка отправки формы
+authSubmit.addEventListener('click', () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+
+    if (!email || !password) {
+        alert('Пожалуйста, заполните email и пароль');
+        return;
+    }
+
+    if (password.length < 6) {
+        alert('Пароль должен быть не менее 6 символов');
+        return;
+    }
+
+    if (isLogin) {
+        auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+                modal.style.display = 'none';
+            })
+            .catch(err => alert('Ошибка входа: ' + err.message));
+    } else {
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(() => {
+                modal.style.display = 'none';
+            })
+            .catch(err => alert('Ошибка регистрации: ' + err.message));
+    }
+});
+
+// Кнопка выхода остаётся прежней
+logoutBtn.addEventListener('click', () => {
+    auth.signOut();
+});
 // Распределение характеристик
 const stats = [strength, dexterity, intelligence];
 stats.forEach(stat => {
