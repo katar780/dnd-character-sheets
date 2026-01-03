@@ -1,214 +1,148 @@
-// script.js - ОБЩИЕ ФУНКЦИИ
-console.log('script.js загружен');
+// Firebase refs
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
 
-// Глобальные переменные
-let db; // Будет инициализировано из firebase-config.js
+// Элементы DOM
+const raceSelect = document.getElementById('race');
+const classSelect = document.getElementById('class');
+const hairColor = document.getElementById('hair-color');
+const eyeColor = document.getElementById('eye-color');
+const strength = document.getElementById('strength');
+const dexterity = document.getElementById('dexterity');
+const intelligence = document.getElementById('intelligence');
+const pointsLeft = document.getElementById('points-left');
+const skills = document.querySelectorAll('input[type="checkbox"]');
+const previewCanvas = document.getElementById('preview');
+const ctx = previewCanvas.getContext('2d');
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Страница загружена');
-    
-    // Проверяем, что Firebase загружен
-    if (typeof firebase !== 'undefined') {
-        db = firebase.firestore();
-        console.log('Firestore инициализирован');
+const saveLocalBtn = document.getElementById('save-local');
+const saveCloudBtn = document.getElementById('save-cloud');
+const exportPngBtn = document.getElementById('export-png');
+const loginBtn = document.getElementById('login-btn');
+const registerBtn = document.getElementById('register-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const userInfo = document.getElementById('user-info');
+
+// Аккаунты
+auth.onAuthStateChanged(user => {
+    if (user) {
+        userInfo.textContent = `Привет, ${user.email}`;
+        loginBtn.style.display = 'none';
+        registerBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline';
+        saveCloudBtn.style.display = 'inline';
+    } else {
+        userInfo.textContent = '';
+        loginBtn.style.display = 'inline';
+        registerBtn.style.display = 'inline';
+        logoutBtn.style.display = 'none';
+        saveCloudBtn.style.display = 'none';
     }
-    
-    // Инициализация общих элементов
-    initCommonElements();
 });
 
-// Инициализация общих элементов
-function initCommonElements() {
-    // Кнопки навигации
-    const navButtons = document.querySelectorAll('[data-nav]');
-    navButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const target = this.getAttribute('data-nav');
-            window.location.href = target;
-        });
-    });
-    
-    // Кнопки назад
-    const backButtons = document.querySelectorAll('.back-button');
-    backButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.history.back();
-        });
-    });
-    
-    // Модальные окна
-    initModals();
-    
-    // Уведомления
-    initNotifications();
+loginBtn.addEventListener('click', () => {
+    const email = prompt('Email:');
+    const password = prompt('Пароль:');
+    auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+});
+
+registerBtn.addEventListener('click', () => {
+    const email = prompt('Email:');
+    const password = prompt('Пароль:');
+    auth.createUserWithEmailAndPassword(email, password).catch(err => alert(err.message));
+});
+
+logoutBtn.addEventListener('click', () => auth.signOut());
+
+// Распределение характеристик
+const stats = [strength, dexterity, intelligence];
+stats.forEach(stat => {
+    stat.addEventListener('input', updatePoints);
+});
+
+function updatePoints() {
+    const total = stats.reduce((sum, s) => sum + parseInt(s.value || 0), 0);
+    pointsLeft.textContent = 20 - total;
+    if (total > 20) alert('Превышено 20 очков!');
 }
 
-// Инициализация модальных окон
-function initModals() {
-    const modalTriggers = document.querySelectorAll('[data-modal]');
-    const modals = document.querySelectorAll('.modal');
-    const closeButtons = document.querySelectorAll('.modal-close');
-    
-    // Открытие модальных окон
-    modalTriggers.forEach(trigger => {
-        trigger.addEventListener('click', function() {
-            const modalId = this.getAttribute('data-modal');
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            }
-        });
-    });
-    
-    // Закрытие модальных окон
-    closeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        });
-    });
-    
-    // Закрытие по клику вне модального окна
-    modals.forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        });
-    });
-    
-    // Закрытие по Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            modals.forEach(modal => {
-                if (modal.style.display === 'flex') {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            });
-        }
-    });
+// Визуализация на Canvas (простой 2D персонаж)
+function drawPreview() {
+    ctx.clearRect(0, 0, 300, 400);
+    // Тело (прямоугольник)
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(100, 150, 100, 200);
+    // Голова
+    ctx.beginPath();
+    ctx.arc(150, 100, 50, 0, Math.PI * 2);
+    ctx.fill();
+    // Волосы
+    ctx.fillStyle = hairColor.value;
+    ctx.fillRect(120, 50, 60, 50);
+    // Глаза
+    ctx.fillStyle = eyeColor.value;
+    ctx.beginPath();
+    ctx.arc(130, 90, 5, 0, Math.PI * 2);
+    ctx.arc(170, 90, 5, 0, Math.PI * 2);
+    ctx.fill();
+    // Раса/класс индикаторы (текст)
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Arial';
+    ctx.fillText(`Раса: ${raceSelect.value}`, 10, 20);
+    ctx.fillText(`Класс: ${classSelect.value}`, 10, 40);
 }
 
-// Инициализация уведомлений
-function initNotifications() {
-    window.showNotification = function(message, type = 'info', duration = 3000) {
-        // Создаем элемент уведомления
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <span class="notification-message">${message}</span>
-            <button class="notification-close">&times;</button>
-        `;
-        
-        // Добавляем в документ
-        document.body.appendChild(notification);
-        
-        // Показываем с анимацией
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 10);
-        
-        // Обработчик закрытия
-        const closeBtn = notification.querySelector('.notification-close');
-        closeBtn.addEventListener('click', () => {
-            hideNotification(notification);
-        });
-        
-        // Автоматическое закрытие
-        if (duration > 0) {
-            setTimeout(() => {
-                hideNotification(notification);
-            }, duration);
-        }
-    };
-    
-    function hideNotification(notification) {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }
-}
+// Обновление превью при изменениях
+[raceSelect, classSelect, hairColor, eyeColor, ...stats].forEach(el => el.addEventListener('change', drawPreview));
+drawPreview(); // Инит
 
-// Форматирование даты
-function formatDate(date) {
-    if (!date) return 'Нет даты';
-    
-    const d = date.toDate ? date.toDate() : new Date(date);
-    return d.toLocaleDateString('ru-RU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
+// Сохранение локально
+saveLocalBtn.addEventListener('click', () => {
+    const char = getCharacterData();
+    localStorage.setItem('rpg_char', JSON.stringify(char));
+    alert('Сохранено локально!');
+});
 
-// Форматирование числа
-function formatNumber(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-}
+// Сохранение в облако (Firestore)
+saveCloudBtn.addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const char = getCharacterData();
+    db.collection('characters').doc(user.uid).set(char)
+        .then(() => alert('Сохранено в облаке!'))
+        .catch(err => alert(err.message));
+});
 
-// Проверка email
-function isValidEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
+// Экспорт PNG
+exportPngBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'rpg_character.png';
+    link.href = previewCanvas.toDataURL();
+    link.click();
+});
 
-// Генератор случайных ID
-function generateId(length = 8) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
-// Дебаунс функция
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+// Получить данные персонажа
+function getCharacterData() {
+    const selectedSkills = Array.from(skills).filter(s => s.checked).map(s => s.value);
+    return {
+        race: raceSelect.value,
+        class: classSelect.value,
+        hair: hairColor.value,
+        eyes: eyeColor.value,
+        strength: strength.value,
+        dexterity: dexterity.value,
+        intelligence: intelligence.value,
+        skills: selectedSkills
     };
 }
 
-// Копирование в буфер обмена
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('Скопировано в буфер обмена', 'success');
-    }).catch(err => {
-        console.error('Ошибка копирования: ', err);
-        showNotification('Ошибка копирования', 'error');
+// Лимит на навыки (max 3)
+skills.forEach(skill => {
+    skill.addEventListener('change', () => {
+        if (Array.from(skills).filter(s => s.checked).length > 3) {
+            skill.checked = false;
+            alert('Максимум 3 навыка!');
+        }
     });
-}
-
-// Проверка мобильного устройства
-function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-// Экспорт функций в глобальную область видимости
-if (typeof window !== 'undefined') {
-    window.formatDate = formatDate;
-    window.formatNumber = formatNumber;
-    window.isValidEmail = isValidEmail;
-    window.generateId = generateId;
-    window.copyToClipboard = copyToClipboard;
-    window.isMobile = isMobile;
-}
+});
