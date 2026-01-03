@@ -1,365 +1,230 @@
 // js/auth.js
-
 class AuthSystem {
     constructor() {
         this.currentUser = null;
+        this.authModal = null;
         this.init();
     }
-    
+
     init() {
         this.setupEventListeners();
         this.checkAuthState();
     }
-    
+
     setupEventListeners() {
-        // Кнопки на главной
-        document.getElementById('login-btn')?.addEventListener('click', () => this.openModal());
+        // Обработчики для кнопок авторизации
+        document.getElementById('login-btn')?.addEventListener('click', () => this.openModal('login'));
         document.getElementById('register-btn')?.addEventListener('click', () => this.openModal('register'));
         document.getElementById('demo-btn')?.addEventListener('click', () => this.demoMode());
         
-        // Закрытие модального окна
+        // Обработчики для модального окна
         document.querySelector('.close-modal')?.addEventListener('click', () => this.closeModal());
-        document.getElementById('auth-modal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'auth-modal') this.closeModal();
-        });
         
-        // Переключение форм
-        document.getElementById('switch-to-register')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showForm('register');
-        });
-        
-        document.getElementById('switch-to-login')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showForm('login');
-        });
-        
-        // Формы
-        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin();
-        });
-        
-        document.getElementById('registerForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleRegister();
-        });
-    }
-    
-    checkAuthState() {
-        const user = window.getCurrentUser();
-        if (user) {
-            this.currentUser = user;
-            this.redirectToDashboard();
-        }
-    }
-    
-    openModal(formType = 'login') {
         const modal = document.getElementById('auth-modal');
         if (modal) {
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            this.showForm(formType);
-            this.clearMessage();
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModal();
+                }
+            });
         }
+        
+        // Обработчики для форм внутри модального окна
+        document.getElementById('login-form')?.addEventListener('submit', (e) => this.handleLogin(e));
+        document.getElementById('register-form')?.addEventListener('submit', (e) => this.handleRegister(e));
+        
+        // Кнопка выхода
+        document.getElementById('logout-btn')?.addEventListener('click', () => this.logout());
     }
-    
+
+    openModal(mode = 'login') {
+        const modal = document.getElementById('auth-modal');
+        if (!modal) {
+            console.error('Модальное окно не найдено!');
+            return;
+        }
+        
+        // Показываем нужную форму
+        if (mode === 'login') {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+            modal.querySelector('.modal-title').textContent = 'Вход в систему';
+        } else {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+            modal.querySelector('.modal-title').textContent = 'Регистрация';
+        }
+        
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Запрещаем прокрутку страницы
+    }
+
     closeModal() {
         const modal = document.getElementById('auth-modal');
         if (modal) {
             modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-            document.getElementById('loginForm')?.reset();
-            document.getElementById('registerForm')?.reset();
-            this.clearMessage();
+            document.body.style.overflow = 'auto'; // Возвращаем прокрутку
+            
+            // Очищаем формы
+            document.getElementById('login-form')?.reset();
+            document.getElementById('register-form')?.reset();
         }
     }
-    
-    showForm(formType) {
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
+
+    async handleLogin(e) {
+        e.preventDefault();
         
-        if (formType === 'login') {
-            loginForm.style.display = 'block';
-            registerForm.style.display = 'none';
-        } else {
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
-        }
-    }
-    
-    async handleLogin() {
-        const email = document.getElementById('login-email').value.trim();
+        const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
         
         if (!email || !password) {
-            this.showMessage('Заполните все поля', 'error');
+            this.showError('Заполните все поля');
             return;
         }
         
-        this.showMessage('Вход...', 'success');
-        
         try {
-            const userCredential = await window.firebaseAuth.signInWithEmailAndPassword(email, password);
-            const user = userCredential.user;
+            // Здесь будет запрос к Firebase или вашему бэкенду
+            console.log('Вход с:', { email, password });
             
-            // Получаем роль пользователя из Firestore
-            let role = 'player';
-            try {
-                const userDoc = await window.firebaseDb.collection('users').doc(user.uid).get();
-                if (userDoc.exists) {
-                    role = userDoc.data().role || 'player';
-                }
-            } catch (error) {
-                console.warn('Не удалось получить роль пользователя:', error);
-            }
-            
-            // Сохраняем пользователя
-            this.currentUser = {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName || email.split('@')[0],
-                role: role
-            };
-            
-            localStorage.setItem('campaign_user', JSON.stringify(this.currentUser));
-            localStorage.setItem(`user_role_${user.uid}`, role);
-            
-            this.showMessage('Вход выполнен!', 'success');
-            
-            setTimeout(() => {
-                this.closeModal();
-                this.redirectToDashboard();
-            }, 1500);
+            // Имитация успешного входа
+            this.currentUser = { email, name: email.split('@')[0] };
+            this.updateUI();
+            this.closeModal();
+            this.showSuccess('Вход выполнен успешно!');
             
         } catch (error) {
-            console.error('Ошибка входа:', error);
-            let message = 'Ошибка входа';
-            
-            switch(error.code) {
-                case 'auth/user-not-found':
-                    message = 'Пользователь не найден';
-                    break;
-                case 'auth/wrong-password':
-                    message = 'Неверный пароль';
-                    break;
-                case 'auth/invalid-email':
-                    message = 'Неверный формат email';
-                    break;
-                case 'auth/too-many-requests':
-                    message = 'Слишком много попыток';
-                    break;
-            }
-            
-            this.showMessage(message, 'error');
+            this.showError('Ошибка входа: ' + error.message);
         }
     }
-    
-    async handleRegister() {
-        const role = document.getElementById('user-type').value;
-        const name = document.getElementById('register-name').value.trim();
-        const email = document.getElementById('register-email').value.trim();
-        const password = document.getElementById('register-password').value;
-        const confirm = document.getElementById('register-confirm').value;
+
+    async handleRegister(e) {
+        e.preventDefault();
         
-        // Валидация
-        if (!role || !name || !email || !password || !confirm) {
-            this.showMessage('Заполните все поля', 'error');
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const confirmPassword = document.getElementById('register-confirm-password').value;
+        
+        if (!email || !password || !confirmPassword) {
+            this.showError('Заполните все поля');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            this.showError('Пароли не совпадают');
             return;
         }
         
         if (password.length < 6) {
-            this.showMessage('Пароль должен быть не менее 6 символов', 'error');
+            this.showError('Пароль должен быть не менее 6 символов');
             return;
         }
-        
-        if (password !== confirm) {
-            this.showMessage('Пароли не совпадают', 'error');
-            return;
-        }
-        
-        this.showMessage('Регистрация...', 'success');
         
         try {
-            // Создаем пользователя в Firebase Auth
-            const userCredential = await window.firebaseAuth.createUserWithEmailAndPassword(email, password);
-            const user = userCredential.user;
+            // Здесь будет запрос к Firebase или вашему бэкенду
+            console.log('Регистрация:', { email, password });
             
-            // Обновляем имя
-            await user.updateProfile({
-                displayName: name
-            });
-            
-            // Сохраняем в Firestore
-            if (window.firebaseDb) {
-                await window.firebaseDb.collection('users').doc(user.uid).set({
-                    uid: user.uid,
-                    email: email,
-                    displayName: name,
-                    role: role,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    campaigns: [],
-                    characters: []
-                });
-            }
-            
-            // Сохраняем локально
-            this.currentUser = {
-                uid: user.uid,
-                email: user.email,
-                displayName: name,
-                role: role
-            };
-            
-            localStorage.setItem('campaign_user', JSON.stringify(this.currentUser));
-            localStorage.setItem(`user_role_${user.uid}`, role);
-            
-            this.showMessage('Регистрация успешна!', 'success');
-            
-            setTimeout(() => {
-                this.closeModal();
-                this.redirectToDashboard();
-            }, 1500);
+            // Имитация успешной регистрации
+            this.currentUser = { email, name: email.split('@')[0] };
+            this.updateUI();
+            this.closeModal();
+            this.showSuccess('Регистрация прошла успешно!');
             
         } catch (error) {
-            console.error('Ошибка регистрации:', error);
-            let message = 'Ошибка регистрации';
-            
-            switch(error.code) {
-                case 'auth/email-already-in-use':
-                    message = 'Email уже используется';
-                    break;
-                case 'auth/invalid-email':
-                    message = 'Неверный формат email';
-                    break;
-                case 'auth/weak-password':
-                    message = 'Пароль слишком слабый';
-                    break;
-            }
-            
-            this.showMessage(message, 'error');
+            this.showError('Ошибка регистрации: ' + error.message);
         }
     }
-    
+
     demoMode() {
-        this.showMessage('Вход в демо-режим...', 'success');
-        
-        const demoUser = {
-            uid: 'demo_' + Date.now(),
-            email: 'demo@campaign-chronicle.local',
-            displayName: 'Демо-пользователь',
-            role: 'both',
-            isDemo: true
+        // Режим демо без регистрации
+        this.currentUser = { 
+            email: 'demo@example.com', 
+            name: 'Демо пользователь',
+            isDemo: true 
         };
+        this.updateUI();
+        this.showSuccess('Демо режим активирован');
+    }
+
+    logout() {
+        this.currentUser = null;
+        this.updateUI();
+        this.showSuccess('Вы вышли из системы');
+    }
+
+    updateUI() {
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userInfo = document.getElementById('user-info');
         
-        this.currentUser = demoUser;
-        localStorage.setItem('campaign_user', JSON.stringify(demoUser));
+        if (this.currentUser) {
+            // Пользователь авторизован
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (registerBtn) registerBtn.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+            
+            if (userInfo) {
+                userInfo.textContent = `Привет, ${this.currentUser.name}`;
+                userInfo.style.display = 'block';
+            }
+        } else {
+            // Пользователь не авторизован
+            if (loginBtn) loginBtn.style.display = 'block';
+            if (registerBtn) registerBtn.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            if (userInfo) userInfo.style.display = 'none';
+        }
+    }
+
+    checkAuthState() {
+        // Проверяем, есть ли сохраненная сессия
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            try {
+                this.currentUser = JSON.parse(savedUser);
+                this.updateUI();
+            } catch (e) {
+                console.error('Ошибка загрузки пользователя:', e);
+            }
+        }
+    }
+
+    showError(message) {
+        // Показываем сообщение об ошибке
+        const errorDiv = document.getElementById('auth-error') || this.createMessageElement();
+        errorDiv.textContent = message;
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.style.display = 'block';
         
         setTimeout(() => {
-            this.showMessage('Демо-режим активирован!', 'success');
-            this.redirectToDashboard();
-        }, 1000);
+            errorDiv.style.display = 'none';
+        }, 5000);
     }
-    
-    redirectToDashboard() {
-        // Здесь будет перенаправление на dashboard.html
-        console.log('Перенаправление на dashboard...');
-        // window.location.href = 'pages/dashboard.html';
+
+    showSuccess(message) {
+        // Показываем успешное сообщение
+        const successDiv = document.getElementById('auth-success') || this.createMessageElement();
+        successDiv.textContent = message;
+        successDiv.className = 'alert alert-success';
+        successDiv.style.display = 'block';
         
-        // Временно показываем сообщение
-        this.showMessage('Панель управления скоро откроется!', 'success');
-        
-        // Создаем временную панель
-        this.createTempDashboard();
+        setTimeout(() => {
+            successDiv.style.display = 'none';
+        }, 3000);
     }
-    
-    createTempDashboard() {
-        const container = document.querySelector('.container');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div class="dashboard-preview">
-                <h2>Панель управления Campaign Chronicle</h2>
-                <div class="user-info">
-                    <p>👤 ${this.currentUser.displayName}</p>
-                    <p>🎭 Роль: ${this.currentUser.role === 'master' ? 'Мастер' : 
-                                  this.currentUser.role === 'player' ? 'Игрок' : 'Мастер + Игрок'}</p>
-                </div>
-                
-                <div class="dashboard-grid">
-                    <div class="dashboard-card">
-                        <h3>📊 Мои кампании</h3>
-                        <p>Создавайте и управляйте кампаниями</p>
-                        <button class="btn btn-primary">Создать кампанию</button>
-                    </div>
-                    
-                    <div class="dashboard-card">
-                        <h3>👤 Мои персонажи</h3>
-                        <p>Управляйте персонажами в разных системах</p>
-                        <button class="btn btn-secondary">Добавить персонажа</button>
-                    </div>
-                    
-                    <div class="dashboard-card">
-                        <h3>🎯 Назначить опыт</h3>
-                        <p>Мастера: начисляйте опыт игрокам</p>
-                        <button class="btn btn-primary">Назначить XP</button>
-                    </div>
-                    
-                    <div class="dashboard-card">
-                        <h3>⏳ Управление даунтаймом</h3>
-                        <p>Планируйте активности между сессиями</p>
-                        <button class="btn btn-secondary">Добавить активность</button>
-                    </div>
-                </div>
-                
-                <div class="logout-section">
-                    <button id="logout-btn" class="btn btn-ghost">Выйти</button>
-                </div>
-            </div>
-        `;
-        
-        // Обработчик выхода
-        document.getElementById('logout-btn')?.addEventListener('click', () => {
-            this.handleLogout();
-        });
-    }
-    
-    async handleLogout() {
-        try {
-            if (window.firebaseAuth && this.currentUser && !this.currentUser.isDemo) {
-                await window.firebaseAuth.signOut();
-            }
-            
-            this.currentUser = null;
-            localStorage.removeItem('campaign_user');
-            
-            // Перезагружаем страницу
-            window.location.reload();
-            
-        } catch (error) {
-            console.error('Ошибка выхода:', error);
-            this.showMessage('Ошибка при выходе', 'error');
-        }
-    }
-    
-    showMessage(text, type = 'success') {
-        const messageElement = document.getElementById('auth-message');
-        if (messageElement) {
-            messageElement.textContent = text;
-            messageElement.className = `message ${type}`;
-        }
-    }
-    
-    clearMessage() {
-        const messageElement = document.getElementById('auth-message');
-        if (messageElement) {
-            messageElement.textContent = '';
-            messageElement.className = 'message';
-        }
+
+    createMessageElement() {
+        const div = document.createElement('div');
+        div.style.position = 'fixed';
+        div.style.top = '20px';
+        div.style.right = '20px';
+        div.style.zIndex = '1000';
+        document.body.appendChild(div);
+        return div;
     }
 }
 
-// Инициализация при загрузке
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     window.authSystem = new AuthSystem();
 });
