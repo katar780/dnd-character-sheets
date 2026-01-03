@@ -1,91 +1,131 @@
 :root {
-    --bg-color: #121212;
-    --text-color: #e0e0e0;
-    --neon-green: #00ff00;
+    --bg: #0a0a0a;
+    --card: #121212;
+    --text: #e0e0e0;
+    --neon-green: #00ff88;
     --neon-blue: #00ffff;
     --accent: #ff00ff;
+    --gray: #444;
 }
 
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-header {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 800px;
-    margin-bottom: 20px;
-}
-
-h1, h2, h3 {
-    text-shadow: 0 0 5px var(--neon-green);
-}
-
-.section {
-    background: #1e1e1e;
-    border: 1px solid var(--neon-blue);
-    border-radius: 8px;
-    padding: 15px;
-    margin: 10px 0;
-    width: 100%;
-    max-width: 600px;
-    transition: box-shadow 0.3s;
-}
-
-.section:hover {
-    box-shadow: 0 0 10px var(--neon-green);
-}
-
-button {
-    background: var(--neon-blue);
-    color: #000;
-    border: none;
-    padding: 10px 20px;
-    margin: 5px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 10px var(--neon-blue);
-}
-
-canvas {
-    border: 2px solid var(--accent);
-    background: #000;
-}
-
-@media (max-width: 600px) {
-    body { padding: 10px; }
-    .section { padding: 10px; }
-}
-.modal {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+}
+
+.container {
+    width: 90%;
+    max-width: 800px;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 15px var(--neon-green);
+}
+
+.subtitle {
+    font-size: 1.4rem;
+    color: var(--neon-green);
+    margin-bottom: 1rem;
+}
+
+.description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin: 2rem 0;
+    color: #aaa;
+}
+
+.auth-buttons .btn {
+    font-size: 1.2rem;
+    padding: 12px 30px;
+    margin: 10px;
+}
+
+.btn {
+    background: transparent;
+    border: 2px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+}
+
+.btn:hover {
+    background: var(--neon-blue);
+    color: #000;
+    box-shadow: 0 0 15px var(--neon-blue);
+}
+
+.btn.primary {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+}
+
+.btn.primary:hover {
+    background: var(--neon-green);
+    color: #000;
+    box-shadow: 0 0 15px var(--neon-green);
+}
+
+.btn.secondary { border-color: var(--accent); color: var(--accent); }
+.btn.secondary:hover { background: var(--accent); color: #000; }
+
+.btn.small { padding: 6px 12px; font-size: 0.9rem; }
+
+.placeholder {
+    color: var(--gray);
+    font-style: italic;
+    margin: 2rem 0;
+}
+
+.quick-actions {
+    margin-top: 3rem;
+}
+
+.quick-actions .btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Модалка */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-content {
-    background: #1e1e1e;
+    background: var(--card);
     padding: 30px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: 2px solid var(--neon-blue);
-    text-align: center;
     width: 90%;
     max-width: 400px;
+    text-align: center;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background: #1e1e1e;
+    border: 1px solid var(--neon-blue);
+    border-radius: 6px;
+    color: white;
 }
 
 .close {
@@ -95,17 +135,13 @@ canvas {
     color: var(--neon-green);
 }
 
-input[type="email"], input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    background: #121212;
-    border: 1px solid var(--neon-blue);
-    color: white;
-    border-radius: 5px;
-}
-
-#switch-mode {
+.switch a {
     color: var(--neon-green);
     text-decoration: underline;
+}
+
+/* Адаптив */
+@media (max-width: 600px) {
+    .hero h1 { font-size: 2.5rem; }
+    .auth-buttons .btn { display: block; width: 100%; margin: 10px 0; }
 }
