@@ -20,6 +20,17 @@
             <button id="logout-btn" style="display: none;">Выйти</button>
             <span id="user-info"></span>
         </div>
+        <!-- Модальное окно для входа/регистрации -->
+<div id="auth-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span id="close-modal" class="close">&times;</span>
+        <h2 id="modal-title">Войти</h2>
+        <input type="email" id="auth-email" placeholder="Email" required>
+        <input type="password" id="auth-password" placeholder="Пароль (мин. 6 символов)" required>
+        <button id="auth-submit">Войти</button>
+        <p id="switch-text">Нет аккаунта? <a href="#" id="switch-mode">Зарегистрироваться</a></p>
+    </div>
+</div>
     </header>
 
     <main>
